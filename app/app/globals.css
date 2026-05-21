@@ -1,0 +1,67 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --brand-primary: #6366F1;
+  --brand-accent: #8B5CF6;
+  --brand-bg: #F8FAFC;
+  --brand-text: #0F172A;
+  --brand-success: #22C55E;
+  --brand-error: #EF4444;
+}
+
+html,
+body {
+  background: var(--brand-bg);
+  color: var(--brand-text);
+  font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+input,
+select,
+textarea,
+button {
+  font-family: inherit;
+}
+
+/* Focus ring that matches the brand palette. */
+:focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 2px;
+}
+
+/* Reusable primitives ------------------------------------------------ */
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl
+      bg-brand-primary text-white font-semibold text-sm
+      hover:bg-indigo-600 active:scale-[0.98] transition
+      disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl
+      bg-white border border-slate-200 text-brand-text font-medium text-sm
+      hover:bg-slate-50 active:scale-[0.98] transition;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center gap-2 px-3 py-1.5 rounded-lg
+      text-slate-600 hover:bg-slate-100 transition text-sm;
+  }
+  .card {
+    @apply bg-white border border-slate-200 rounded-2xl shadow-card;
+  }
+  .input {
+    @apply w-full px-4 py-3 rounded-xl border border-slate-200 bg-white
+      text-brand-text placeholder:text-slate-400
+      focus:border-brand-primary focus:ring-4 focus:ring-indigo-100
+      transition outline-none;
+  }
+  .label {
+    @apply block text-sm font-medium text-slate-700 mb-1.5;
+  }
+}

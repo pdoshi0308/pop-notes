@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8" />
+    <title>Popform</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <!-- Login screen -->
+    <section id="screen-login" class="screen" hidden>
+      <header class="brand">
+        <span class="brand-mark"></span>
+        <span class="brand-name">Popform</span>
+      </header>
+
+      <form id="login-form" autocomplete="on">
+        <label class="label" for="login-email">Email</label>
+        <input id="login-email" type="email" class="input" autocomplete="username" required />
+
+        <label class="label" for="login-password">Password</label>
+        <input id="login-password" type="password" class="input" autocomplete="current-password" required />
+
+        <p id="login-error" class="error" hidden></p>
+
+        <button class="btn-primary" id="login-submit" type="submit">
+          <span class="btn-label">Sign in</span>
+          <span class="spinner" aria-hidden="true"></span>
+        </button>
+
+        <a class="link-muted" href="#" id="forgot-link">Forgot password?</a>
+      </form>
+    </section>
+
+    <!-- Main screen -->
+    <section id="screen-main" class="screen" hidden>
+      <header class="topbar">
+        <div class="brand small">
+          <span class="brand-mark"></span>
+          <span class="brand-name">Popform</span>
+        </div>
+        <button id="signout" class="avatar" title="Sign out">
+          <span id="avatar-initial">·</span>
+        </button>
+      </header>
+
+      <h1 id="practice-name" class="practice-name">Loading…</h1>
+
+      <!-- Phone input -->
+      <div id="state-input" class="state">
+        <label class="label" for="phone">Patient mobile</label>
+        <input
+          id="phone"
+          class="input phone"
+          inputmode="tel"
+          autocomplete="tel"
+          placeholder="07700 900 123"
+        />
+        <p id="send-error" class="error" hidden></p>
+        <button class="btn-primary full" id="send-btn" disabled>
+          <span class="btn-label">Send Form</span>
+          <span class="spinner" aria-hidden="true"></span>
+        </button>
+      </div>
+
+      <!-- Waiting state -->
+      <div id="state-waiting" class="state" hidden>
+        <div class="pulse">
+          <div class="pulse-dot"></div>
+        </div>
+        <p class="waiting-title">Form sent</p>
+        <p class="waiting-sub" id="waiting-sub">Waiting for the patient to fill it in…</p>
+        <button class="btn-ghost" id="cancel-wait">Send another</button>
+      </div>
+
+      <!-- Result state -->
+      <div id="state-result" class="state" hidden>
+        <div class="result-header">
+          <p class="result-title">
+            <span class="dot success"></span> Patient submitted
+          </p>
+          <button class="btn-ghost small" id="copy-all">Copy all</button>
+        </div>
+        <ul id="result-fields" class="fields"></ul>
+        <button class="btn-primary full" id="send-another">Send another</button>
+      </div>
+    </section>
+
+    <!-- Pusher client (loaded locally to satisfy MV3 CSP) -->
+    <script src="lib/pusher.min.js"></script>
+    <script src="config.js"></script>
+    <script src="lib/phone.js"></script>
+    <script src="lib/api.js"></script>
+    <script src="popup.js"></script>
+  </body>
+</html>

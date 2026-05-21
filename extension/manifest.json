@@ -1,0 +1,31 @@
+{
+  "manifest_version": 3,
+  "name": "Popform",
+  "version": "1.0.0",
+  "description": "Send a patient registration form over SMS and receive the details back in real time.",
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Popform",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "permissions": ["storage"],
+  "host_permissions": [
+    "https://*.supabase.co/*",
+    "https://popform.io/*",
+    "http://localhost:3000/*",
+    "https://*.pusher.com/*",
+    "wss://*.pusher.com/*"
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; connect-src 'self' https://*.supabase.co https://popform.io http://localhost:3000 https://*.pusher.com wss://*.pusher.com https://*.pusherapp.com wss://*.pusherapp.com;"
+  }
+}
