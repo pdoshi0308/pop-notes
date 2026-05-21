@@ -1,10 +1,15 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import { BRAND } from '@/lib/brand';
 
 export const metadata: Metadata = {
-  title: 'Popform — Send registration forms over SMS',
-  description:
-    'Popform lets medical and dental receptionists send a registration form to a patient via SMS and receive the completed details back in real time.',
+  title: `${BRAND.name} — ${BRAND.tagline}`,
+  description: BRAND.description,
+  openGraph: {
+    title: `${BRAND.name} — ${BRAND.tagline}`,
+    description: BRAND.description,
+    type: 'website',
+  },
 };
 
 export default function RootLayout({

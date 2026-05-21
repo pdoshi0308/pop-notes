@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase-server';
 import SignOutButton from './components/sign-out-button';
 import NavLinks from './components/nav-links';
+import { BRAND } from '@/lib/brand';
 
 export default async function DashboardLayout({
   children,
@@ -48,7 +49,7 @@ export default async function DashboardLayout({
             className="flex items-center gap-2 font-extrabold text-lg tracking-tight"
           >
             <span className="w-7 h-7 rounded-lg bg-gradient-to-br from-brand-primary to-brand-accent" />
-            Popform
+            {BRAND.name}
           </Link>
           <p className="mt-3 text-xs text-slate-500">{workspace?.name ?? 'Practice'}</p>
         </div>

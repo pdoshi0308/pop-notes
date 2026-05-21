@@ -61,6 +61,23 @@
     });
   }
 
+  async function getWorkspace(accessToken) {
+    return jsonFetch(CFG.API_BASE + '/api/workspace', {
+      headers: { Authorization: 'Bearer ' + accessToken },
+    });
+  }
+
+  async function updateWorkspace(accessToken, patch) {
+    return jsonFetch(CFG.API_BASE + '/api/workspace', {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + accessToken,
+      },
+      body: JSON.stringify(patch),
+    });
+  }
+
   // Wrap a call so that on 401 we transparently try to refresh the session.
   async function withFreshToken(session, fn) {
     try {
@@ -77,5 +94,13 @@
     }
   }
 
-  root.PopformAPI = { signIn, refresh, getMe, sendForm, withFreshToken };
+  root.PopformAPI = {
+    signIn,
+    refresh,
+    getMe,
+    sendForm,
+    getWorkspace,
+    updateWorkspace,
+    withFreshToken,
+  };
 })(window);

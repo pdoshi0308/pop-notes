@@ -51,9 +51,25 @@ export const FIELD_CATALOGUE: FieldDefinition[] = [
   },
   { id: 'date_of_birth', label: 'Date of Birth', type: 'date' },
   { id: 'email', label: 'Email', type: 'email', placeholder: 'you@example.com' },
-  { id: 'address_line_1', label: 'Address Line 1', type: 'text' },
-  { id: 'address_line_2', label: 'Address Line 2', type: 'text' },
-  { id: 'postcode', label: 'Postcode', type: 'text', postcodeLookup: true, placeholder: 'SW1A 1AA' },
+  {
+    id: 'postcode',
+    label: 'Postcode',
+    type: 'text',
+    postcodeLookup: true,
+    placeholder: 'SW1A 1AA',
+  },
+  {
+    id: 'address_line_1',
+    label: 'Address',
+    type: 'text',
+    placeholder: 'House number and street',
+  },
+  {
+    id: 'address_line_2',
+    label: 'Address line 2',
+    type: 'text',
+    placeholder: 'Flat, building, area (optional)',
+  },
   { id: 'gp_name', label: 'GP Name', type: 'text' },
   {
     id: 'nhs_private',
@@ -104,8 +120,8 @@ export const DEFAULT_FORM_CONFIG: FormConfigEntry[] = [
   { id: 'mobile_number', required: true },
   { id: 'date_of_birth', required: true },
   { id: 'email', required: true },
-  { id: 'address_line_1', required: false },
   { id: 'postcode', required: false },
+  { id: 'address_line_1', required: false },
 ];
 
 /**

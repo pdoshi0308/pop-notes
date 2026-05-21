@@ -2,21 +2,27 @@ import { NextRequest, NextResponse } from 'next/server';
 import twilio from 'twilio';
 import { createSupabaseAdminClient } from '@/lib/supabase-server';
 import { toE164 } from '@/lib/phone';
+import { PLAN_BY_ID, type PlanId } from '@/lib/plans';
 
 export const runtime = 'nodejs';
 
 /**
- * POST /api/send
- * Body: { phone: string }
+ * POST /api/send  { phone }
  * Headers: Authorization: Bearer <Supabase access_token>
  *
- * Validates the JWT, looks up the caller's workspace + Twilio creds, then
- * sends the configured SMS to the patient.
+ * Flow:
+ *   1. Validate JWT
+ *   2. Look up workspace + plan
+ *   3. Roll the usage counter if a new billing period has started
+ *   4. Refuse if the workspace is over its SMS allowance
+ *   5. Send via central Twilio (env vars) OR workspace Twilio (BYO override)
+ *   6. Increment the counter
  */
 export async function POST(req: NextRequest) {
   try {
-    const authHeader = req.headers.get('authorization') ?? '';
-    const token = authHeader.replace(/^Bearer\s+/i, '').trim();
+    const token = (req.headers.get('authorization') ?? '')
+      .replace(/^Bearer\s+/i, '')
+      .trim();
     if (!token) return jsonError('Missing access token', 401);
 
     const { phone } = (await req.json()) as { phone?: string };
@@ -27,42 +33,87 @@ export async function POST(req: NextRequest) {
 
     const admin = createSupabaseAdminClient();
 
-    // Validate the Supabase JWT by asking Supabase to resolve the user.
     const { data: userResult, error: userErr } = await admin.auth.getUser(token);
     if (userErr || !userResult?.user) return jsonError('Invalid session', 401);
 
-    const userId = userResult.user.id;
-
-    // Get the caller's workspace + Twilio creds.
-    const { data: profile, error: profileErr } = await admin
+    const { data: profile } = await admin
       .from('users')
       .select('workspace_id')
-      .eq('id', userId)
+      .eq('id', userResult.user.id)
       .maybeSingle();
-    if (profileErr || !profile?.workspace_id) {
+    if (!profile?.workspace_id) {
       return jsonError('User is not assigned to a workspace', 403);
     }
 
     const { data: ws, error: wsErr } = await admin
       .from('workspaces')
       .select(
-        'id, name, twilio_account_sid, twilio_auth_token, twilio_from_number, sms_template'
+        'id, name, plan, sms_used_this_period, period_start, twilio_account_sid, twilio_auth_token, twilio_from_number, sms_template'
       )
       .eq('id', profile.workspace_id)
       .maybeSingle();
     if (wsErr || !ws) return jsonError('Workspace not found', 404);
 
-    if (!ws.twilio_account_sid || !ws.twilio_auth_token || !ws.twilio_from_number) {
-      return jsonError(
-        'Twilio credentials are not set up for this workspace yet. Visit Settings in the dashboard.',
-        400
+    // ---------------------------------------------------------------------
+    // Roll the counter if we're in a new calendar month.
+    // ---------------------------------------------------------------------
+    const now = new Date();
+    const periodStart = ws.period_start ? new Date(ws.period_start) : new Date(0);
+    const sameMonth =
+      now.getUTCFullYear() === periodStart.getUTCFullYear() &&
+      now.getUTCMonth() === periodStart.getUTCMonth();
+    let smsUsed = ws.sms_used_this_period ?? 0;
+    if (!sameMonth) {
+      smsUsed = 0;
+      await admin
+        .from('workspaces')
+        .update({
+          sms_used_this_period: 0,
+          period_start: new Date(
+            Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)
+          ).toISOString(),
+        })
+        .eq('id', ws.id);
+    }
+
+    // ---------------------------------------------------------------------
+    // Enforce the plan limit.
+    // ---------------------------------------------------------------------
+    const plan: PlanId = ((ws.plan as PlanId) || 'free') as PlanId;
+    const limit = PLAN_BY_ID[plan].sms_limit;
+    if (smsUsed >= limit) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: `You've used all ${limit} SMS forms this month on the ${PLAN_BY_ID[plan].name} plan. Upgrade in Settings to send more.`,
+          over_limit: true,
+          plan,
+          limit,
+        },
+        { status: 402 }
       );
     }
+
+    // ---------------------------------------------------------------------
+    // Pick Twilio creds: workspace BYO if set, otherwise central env.
+    // ---------------------------------------------------------------------
+    const sid =
+      ws.twilio_account_sid || process.env.TWILIO_ACCOUNT_SID || '';
+    const tok =
+      ws.twilio_auth_token || process.env.TWILIO_AUTH_TOKEN || '';
+    const from =
+      ws.twilio_from_number || process.env.TWILIO_FROM_NUMBER || '';
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://popform.io';
     const link = `${appUrl}/register?workspace=${ws.id}&ref=${encodeURIComponent(
       e164.replace(/^\+/, '')
     )}`;
+
+    if (!sid || !tok || !from) {
+      // No central Twilio + no BYO → dev mode (helpful during local testing).
+      console.log(`[/api/send] dev mode (no Twilio) — link for ${e164}: ${link}`);
+      return NextResponse.json({ ok: true, phone: e164, dev_mode: true, link });
+    }
 
     const template =
       ws.sms_template ||
@@ -71,14 +122,16 @@ export async function POST(req: NextRequest) {
       .replaceAll('{practice_name}', ws.name ?? 'Your practice')
       .replaceAll('{link}', link);
 
-    const client = twilio(ws.twilio_account_sid, ws.twilio_auth_token);
-    await client.messages.create({
-      to: e164,
-      from: ws.twilio_from_number,
-      body,
-    });
+    const client = twilio(sid, tok);
+    await client.messages.create({ to: e164, from, body });
 
-    return NextResponse.json({ ok: true, phone: e164 });
+    // Increment the usage counter. Best-effort — if it fails, the SMS still went.
+    await admin
+      .from('workspaces')
+      .update({ sms_used_this_period: smsUsed + 1 })
+      .eq('id', ws.id);
+
+    return NextResponse.json({ ok: true, phone: e164, used: smsUsed + 1, limit });
   } catch (err) {
     console.error('[/api/send]', err);
     return jsonError('Could not send SMS. Please try again.', 500);

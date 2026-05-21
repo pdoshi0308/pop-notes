@@ -1,9 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { createSupabaseBrowserClient } from '@/lib/supabase-browser';
+import { BRAND } from '@/lib/brand';
 
 export default function DashboardLogin() {
   const router = useRouter();
@@ -27,24 +29,52 @@ export default function DashboardLogin() {
     router.refresh();
   }
 
+  async function signInWithGoogle() {
+    setError(null);
+    const supabase = createSupabaseBrowserClient();
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo:
+          typeof window !== 'undefined' ? `${window.location.origin}/dashboard` : undefined,
+      },
+    });
+    if (error) setError(error.message);
+  }
+
   return (
     <main className="min-h-screen flex items-center justify-center px-6 bg-brand-bg">
       <div className="card w-full max-w-sm p-7 animate-pop-in">
-        <div className="flex items-center gap-2 font-extrabold text-lg tracking-tight mb-6 justify-center">
+        <Link
+          href="/"
+          className="flex items-center gap-2 font-extrabold text-lg tracking-tight mb-6 justify-center"
+        >
           <span className="w-7 h-7 rounded-lg bg-gradient-to-br from-brand-primary to-brand-accent" />
-          Popform
-        </div>
+          {BRAND.name}
+        </Link>
 
         <h1 className="text-xl font-semibold text-center">Sign in</h1>
         <p className="text-sm text-slate-500 text-center mt-1 mb-6">
           Practice admin dashboard
         </p>
 
+        <button
+          type="button"
+          onClick={signInWithGoogle}
+          className="btn-secondary w-full !py-3 mb-3"
+        >
+          <GoogleIcon /> Continue with Google
+        </button>
+
+        <div className="flex items-center gap-3 my-4">
+          <span className="flex-1 h-px bg-slate-200" />
+          <span className="text-xs text-slate-400 uppercase tracking-wider">or</span>
+          <span className="flex-1 h-px bg-slate-200" />
+        </div>
+
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>
-            <label className="label" htmlFor="email">
-              Email
-            </label>
+            <label className="label" htmlFor="email">Email</label>
             <input
               id="email"
               type="email"
@@ -56,9 +86,7 @@ export default function DashboardLogin() {
             />
           </div>
           <div>
-            <label className="label" htmlFor="password">
-              Password
-            </label>
+            <label className="label" htmlFor="password">Password</label>
             <input
               id="password"
               type="password"
@@ -70,19 +98,34 @@ export default function DashboardLogin() {
             />
           </div>
 
-          {error && (
-            <p className="text-sm text-brand-error font-medium">{error}</p>
-          )}
+          {error && <p className="text-sm text-brand-error font-medium">{error}</p>}
 
           <button className="btn-primary w-full py-3" disabled={busy}>
             {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Sign in'}
           </button>
         </form>
 
-        <p className="text-xs text-center text-slate-400 mt-6">
+        <p className="text-xs text-center text-slate-500 mt-6">
+          No account?{' '}
+          <Link href="/signup" className="text-brand-primary font-medium">
+            Create your practice
+          </Link>
+        </p>
+        <p className="text-[11px] text-center text-slate-400 mt-2">
           Receptionists sign in through the Chrome extension.
         </p>
       </div>
     </main>
+  );
+}
+
+function GoogleIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 48 48" aria-hidden="true">
+      <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.7-6 8-11.3 8a12 12 0 1 1 0-24c3 0 5.8 1.1 7.9 3l5.7-5.7C34.3 6.2 29.4 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.2-.1-2.3-.4-3.5z" />
+      <path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 16 19 13 24 13c3 0 5.8 1.1 7.9 3l5.7-5.7C34.3 6.2 29.4 4 24 4 16.2 4 9.4 8.7 6.3 14.7z" />
+      <path fill="#4CAF50" d="M24 44c5.3 0 10-2 13.6-5.3l-6.3-5.2C29.3 35 26.8 36 24 36c-5.3 0-9.7-3.3-11.3-8l-6.5 5C9.3 39.3 16 44 24 44z" />
+      <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.2 4.3-4.1 5.5l6.3 5.2C41 35 44 30 44 24c0-1.2-.1-2.3-.4-3.5z" />
+    </svg>
   );
 }

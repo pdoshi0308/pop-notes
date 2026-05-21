@@ -6,7 +6,10 @@
  * point at your deployed Next.js app.
  */
 window.POPFORM_CONFIG = {
-  SUPABASE_URL: 'https://your-project.supabase.co',
-  SUPABASE_ANON_KEY: 'your-anon-key',
-  API_BASE: 'https://popform.io',
+  // Brand — change here once to rename the extension UI.
+  BRAND_NAME: 'Popform',
+
+  SUPABASE_URL: 'https://usgdjgbuuhamlczospio.supabase.co',
+  SUPABASE_ANON_KEY: 'sb_publishable_6Wjxls37PcIxHAE8PrMpJQ_29foBFek',
+  API_BASE: 'http://localhost:3000',
 };

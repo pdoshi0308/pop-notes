@@ -24,11 +24,16 @@ html, body {
 }
 
 body {
-  width: 380px;
-  min-height: 320px;
+  /* Side panel: fluid width, full viewport height. */
+  width: 100%;
+  min-width: 320px;
+  min-height: 100vh;
 }
 
 .screen {
+  /* Keep the UI comfortable when the panel is dragged wider. */
+  max-width: 420px;
+  margin: 0 auto;
   padding: 20px 20px 18px;
   animation: fade-in 200ms ease-out both;
 }
@@ -71,6 +76,64 @@ body {
   align-items: center;
   justify-content: space-between;
   margin-bottom: 6px;
+  gap: 8px;
+}
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.icon-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 120ms ease, color 120ms ease, transform 80ms ease;
+}
+.icon-btn:hover { background: #F1F5F9; color: var(--text); }
+.icon-btn:active { transform: scale(0.95); }
+
+.settings-title {
+  margin: 0;
+  font-weight: 700;
+  font-size: 15px;
+  flex: 1;
+  text-align: center;
+}
+.section-h {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin: 18px 0 6px;
+}
+.muted-line {
+  font-size: 12px;
+  color: var(--muted);
+  margin: 0 0 8px;
+}
+.muted-line code {
+  background: #F1F5F9;
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 11px;
+}
+fieldset {
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+fieldset[disabled] .input,
+fieldset[disabled] .btn-primary {
+  opacity: 0.5;
+  pointer-events: none;
 }
 
 .avatar {
@@ -95,8 +158,41 @@ body {
   font-size: 22px;
   font-weight: 700;
   letter-spacing: -0.02em;
-  margin: 12px 0 18px;
+  margin: 12px 0 8px;
 }
+.billing-strip {
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: white;
+  border: 1px solid var(--border);
+  margin-bottom: 14px;
+}
+.billing-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.billing-plan {
+  font-weight: 700;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.billing-usage { font-variant-numeric: tabular-nums; font-weight: 500; }
+.billing-bar {
+  height: 4px;
+  border-radius: 999px;
+  background: #F1F5F9;
+  overflow: hidden;
+}
+.billing-bar-fill {
+  height: 100%;
+  background: var(--primary);
+  transition: width 200ms ease;
+}
+.billing-bar-fill.warn { background: var(--error); }
 
 /* Form controls ------------------------------------------------------- */
 .label {

@@ -2,7 +2,14 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Check, Loader2, MapPin, ChevronRight, ChevronLeft } from 'lucide-react';
+import {
+  Check,
+  Loader2,
+  MapPin,
+  ChevronRight,
+  ChevronLeft,
+  Search,
+} from 'lucide-react';
 import type { FieldDefinition } from '@/lib/fields';
 import { formatUkMobile } from '@/lib/phone';
 
@@ -14,6 +21,13 @@ interface ConfigResponse {
   workspace: WorkspaceInfo;
   fields: ResolvedField[];
   error?: string;
+}
+
+interface PostcodeMatch {
+  town: string;
+  district: string;
+  ward: string;
+  thoroughfare?: string;
 }
 
 const STEP_SIZE = 4;
@@ -32,6 +46,8 @@ export default function RegisterClient() {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [postcodeBusy, setPostcodeBusy] = useState(false);
+  const [postcodeMatch, setPostcodeMatch] = useState<PostcodeMatch | null>(null);
+  const [postcodeNotFound, setPostcodeNotFound] = useState(false);
 
   // ------- Load config -------
   useEffect(() => {
@@ -48,12 +64,8 @@ export default function RegisterClient() {
         setWorkspace(data.workspace);
         setFields(data.fields);
 
-        // Pre-fill mobile number from the SMS link.
         const initial: Record<string, string> = {};
-        if (refParam) {
-          const pretty = formatUkMobile(refParam);
-          initial.mobile_number = pretty;
-        }
+        if (refParam) initial.mobile_number = formatUkMobile(refParam);
         setValues(initial);
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : 'Failed to load');
@@ -84,31 +96,43 @@ export default function RegisterClient() {
     setValues((prev) => ({ ...prev, [id]: value }));
   }
 
-  // ------- Postcode lookup via postcodes.io -------
-  async function tryPostcodeLookup(postcode: string) {
-    const cleaned = postcode.replace(/\s+/g, '').toUpperCase();
+  // ------- Postcode lookup -------
+  async function doPostcodeLookup(raw: string) {
+    const cleaned = raw.replace(/\s+/g, '').toUpperCase();
     if (cleaned.length < 5) return;
     setPostcodeBusy(true);
+    setPostcodeNotFound(false);
     try {
       const res = await fetch(`https://api.postcodes.io/postcodes/${cleaned}`);
-      if (!res.ok) return;
+      if (!res.ok) {
+        setPostcodeMatch(null);
+        setPostcodeNotFound(true);
+        return;
+      }
       const data = await res.json();
       const r = data?.result;
-      if (!r) return;
-      setValues((prev) => {
-        const next = { ...prev };
-        if (!next.address_line_1) {
-          next.address_line_1 = [r.thoroughfare, r.admin_ward]
-            .filter(Boolean)
-            .join(', ');
-        }
-        if (!next.address_line_2) {
-          next.address_line_2 = r.admin_district ?? r.parish ?? '';
-        }
-        return next;
+      if (!r) {
+        setPostcodeMatch(null);
+        setPostcodeNotFound(true);
+        return;
+      }
+      const town = r.admin_district || r.parish || r.admin_county || '';
+      setPostcodeMatch({
+        town,
+        district: r.admin_district ?? '',
+        ward: r.admin_ward ?? '',
+        thoroughfare: r.thoroughfare ?? undefined,
       });
+      // Format the postcode nicely (e.g. "SW1A 1AA"). The town is shown in
+      // the success chip below — we deliberately don't write it into
+      // address_line_2 because that's reserved for "Flat / apartment" both
+      // semantically and for browser autofill (autocomplete="address-line2").
+      setValues((prev) => ({
+        ...prev,
+        postcode: (cleaned.slice(0, -3) + ' ' + cleaned.slice(-3)).trim(),
+      }));
     } catch {
-      // silently ignore — patient can still type manually
+      setPostcodeMatch(null);
     } finally {
       setPostcodeBusy(false);
     }
@@ -134,6 +158,8 @@ export default function RegisterClient() {
       await submit();
     } else {
       setStep((s) => s + 1);
+      // Scroll to top on step change so patient sees the new step header.
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }
 
@@ -146,9 +172,6 @@ export default function RegisterClient() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           workspace_id: workspaceId,
-          // Use the ref the SMS link carried — that's the channel reception
-          // is already subscribed to. The patient's edited mobile_number
-          // still rides along inside `fields`.
           phone: refParam || values.mobile_number,
           fields: values,
         }),
@@ -178,7 +201,9 @@ export default function RegisterClient() {
     return (
       <div className="flex-1 flex items-center justify-center p-6">
         <div className="card p-6 text-center max-w-sm">
-          <p className="text-brand-error font-medium mb-2">Something&apos;s not right</p>
+          <p className="text-brand-error font-medium mb-2">
+            Something&apos;s not right
+          </p>
           <p className="text-sm text-slate-600">{error}</p>
         </div>
       </div>
@@ -192,24 +217,31 @@ export default function RegisterClient() {
   const progress = ((step + 1) / steps.length) * 100;
 
   return (
-    <div className="flex-1 px-5 py-8 max-w-md mx-auto w-full">
-      <header className="mb-6">
-        <p className="text-xs uppercase tracking-wider text-slate-400 font-semibold">
+    <div className="flex-1 flex flex-col w-full max-w-md mx-auto"
+         style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+      {/* Sticky header with progress */}
+      <header className="sticky top-0 z-10 bg-brand-bg/95 backdrop-blur px-5 pt-6 pb-3 border-b border-slate-100">
+        <p className="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">
           Patient registration
         </p>
-        <h1 className="text-2xl font-bold mt-1">{workspace?.name}</h1>
+        <h1 className="text-xl font-bold mt-0.5">{workspace?.name}</h1>
         {steps.length > 1 && (
-          <div className="mt-4 h-1.5 rounded-full bg-slate-100 overflow-hidden">
+          <div className="mt-3 h-1 rounded-full bg-slate-100 overflow-hidden">
             <div
               className="h-full bg-brand-primary transition-all duration-300"
               style={{ width: `${progress}%` }}
             />
           </div>
         )}
+        {steps.length > 1 && (
+          <p className="text-[11px] text-slate-400 mt-1.5">
+            Step {step + 1} of {steps.length}
+          </p>
+        )}
       </header>
 
       <form
-        className="space-y-4 animate-fade-in"
+        className="flex-1 px-5 py-5 space-y-5 animate-fade-in pb-32"
         onSubmit={(e) => {
           e.preventDefault();
           handleNext();
@@ -220,46 +252,62 @@ export default function RegisterClient() {
             key={field.id}
             field={field}
             value={values[field.id] ?? ''}
-            onChange={(v) => setValue(field.id, v)}
-            onPostcodeBlur={() =>
-              field.postcodeLookup && tryPostcodeLookup(values[field.id] ?? '')
-            }
+            onChange={(v) => {
+              setValue(field.id, v);
+              if (field.id === 'postcode') {
+                // Reset success/error indicators when the patient edits the field.
+                setPostcodeMatch(null);
+                setPostcodeNotFound(false);
+              }
+            }}
             postcodeBusy={field.postcodeLookup && postcodeBusy}
+            postcodeMatch={field.postcodeLookup ? postcodeMatch : null}
+            postcodeNotFound={field.postcodeLookup ? postcodeNotFound : false}
+            onPostcodeFind={() =>
+              field.postcodeLookup && doPostcodeLookup(values[field.id] ?? '')
+            }
           />
         ))}
 
         {error && (
-          <p className="text-sm text-brand-error font-medium">{error}</p>
+          <p className="text-sm text-brand-error font-medium" role="alert">
+            {error}
+          </p>
         )}
+      </form>
 
-        <div className="flex items-center gap-2 pt-2">
-          {step > 0 && (
-            <button
-              type="button"
-              className="btn-secondary"
-              onClick={() => setStep((s) => s - 1)}
-              disabled={submitting}
-            >
-              <ChevronLeft className="w-4 h-4" /> Back
-            </button>
-          )}
+      {/* Sticky bottom action bar — always reachable by thumb. */}
+      <div
+        className="sticky bottom-0 left-0 right-0 bg-brand-bg/95 backdrop-blur border-t border-slate-100 px-5 pt-3 pb-5 flex items-center gap-2"
+        style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 1.25rem)' }}
+      >
+        {step > 0 && (
           <button
-            type="submit"
-            className="btn-primary flex-1 py-3.5 text-base"
+            type="button"
+            className="btn-secondary py-4 px-5"
+            onClick={() => setStep((s) => s - 1)}
             disabled={submitting}
           >
-            {submitting ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
-            ) : isLastStep ? (
-              <>Submit</>
-            ) : (
-              <>
-                Continue <ChevronRight className="w-4 h-4" />
-              </>
-            )}
+            <ChevronLeft className="w-5 h-5" />
           </button>
-        </div>
-      </form>
+        )}
+        <button
+          type="button"
+          onClick={handleNext}
+          className="btn-primary flex-1 py-4 text-base font-semibold"
+          disabled={submitting}
+        >
+          {submitting ? (
+            <Loader2 className="w-5 h-5 animate-spin" />
+          ) : isLastStep ? (
+            <>Submit</>
+          ) : (
+            <>
+              Continue <ChevronRight className="w-5 h-5" />
+            </>
+          )}
+        </button>
+      </div>
     </div>
   );
 }
@@ -271,33 +319,50 @@ function FieldRow({
   field,
   value,
   onChange,
-  onPostcodeBlur,
+  onPostcodeFind,
   postcodeBusy,
+  postcodeMatch,
+  postcodeNotFound,
 }: {
   field: ResolvedField;
   value: string;
   onChange: (v: string) => void;
-  onPostcodeBlur?: () => void;
+  onPostcodeFind?: () => void;
   postcodeBusy?: boolean;
+  postcodeMatch?: PostcodeMatch | null;
+  postcodeNotFound?: boolean;
 }) {
-  const common = {
-    id: `f-${field.id}`,
-    name: field.id,
-    required: field.required,
-    placeholder: field.placeholder,
-    value,
-    onChange: (
-      e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-    ) => onChange(e.target.value),
-    className: 'input text-base',
-  };
+  const autoComplete = AUTOCOMPLETE_BY_FIELD[field.id];
+  const inputMode = INPUT_MODE_BY_FIELD[field.id] ?? INPUT_MODE_BY_TYPE[field.type];
+
+  const baseInputClass =
+    'input text-base py-4 rounded-2xl placeholder:text-slate-400';
 
   let control: React.ReactNode;
+
   if (field.type === 'textarea') {
-    control = <textarea {...common} rows={4} />;
+    control = (
+      <textarea
+        id={`f-${field.id}`}
+        name={field.id}
+        required={field.required}
+        placeholder={field.placeholder}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        rows={4}
+        className={baseInputClass}
+      />
+    );
   } else if (field.type === 'select') {
     control = (
-      <select {...common}>
+      <select
+        id={`f-${field.id}`}
+        name={field.id}
+        required={field.required}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className={baseInputClass}
+      >
         <option value="">Choose one…</option>
         {field.options?.map((o) => (
           <option key={o} value={o}>
@@ -308,7 +373,7 @@ function FieldRow({
     );
   } else if (field.type === 'radio') {
     control = (
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-2 gap-2.5">
         {field.options?.map((o) => {
           const active = value === o;
           return (
@@ -317,10 +382,10 @@ function FieldRow({
               type="button"
               onClick={() => onChange(o)}
               className={[
-                'py-3 rounded-xl border text-sm font-medium transition',
+                'py-4 rounded-2xl border text-base font-medium transition active:scale-[0.98]',
                 active
-                  ? 'bg-brand-primary text-white border-brand-primary'
-                  : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300',
+                  ? 'bg-brand-primary text-white border-brand-primary shadow-sm'
+                  : 'bg-white border-slate-200 text-slate-700',
               ].join(' ')}
             >
               {o}
@@ -329,28 +394,83 @@ function FieldRow({
         })}
       </div>
     );
-  } else {
+  } else if (field.postcodeLookup) {
+    // Postcode field gets an inline Find button + result indicator.
     control = (
-      <div className="relative">
-        <input
-          {...common}
-          type={field.type}
-          inputMode={field.type === 'tel' ? 'tel' : undefined}
-          onBlur={onPostcodeBlur}
-        />
-        {postcodeBusy && (
-          <Loader2 className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 animate-spin text-slate-400" />
+      <div className="space-y-2">
+        <div className="flex gap-2">
+          <input
+            id={`f-${field.id}`}
+            name={field.id}
+            type="text"
+            inputMode="text"
+            autoCapitalize="characters"
+            autoComplete="postal-code"
+            placeholder={field.placeholder}
+            required={field.required}
+            value={value}
+            onChange={(e) => onChange(e.target.value.toUpperCase())}
+            className={baseInputClass + ' flex-1 tracking-wider font-medium'}
+          />
+          <button
+            type="button"
+            onClick={onPostcodeFind}
+            disabled={postcodeBusy || value.replace(/\s+/g, '').length < 5}
+            className="px-4 rounded-2xl bg-brand-primary text-white font-semibold text-sm disabled:opacity-40 disabled:bg-slate-200 disabled:text-slate-400 active:scale-[0.97] transition flex items-center gap-1.5"
+          >
+            {postcodeBusy ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <>
+                <Search className="w-4 h-4" /> Find
+              </>
+            )}
+          </button>
+        </div>
+        {postcodeMatch && (
+          <div className="flex items-center gap-2 text-xs text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-xl px-3 py-2 animate-fade-in">
+            <Check className="w-4 h-4 shrink-0" />
+            <span>
+              Found:&nbsp;
+              <span className="font-semibold">
+                {[postcodeMatch.thoroughfare, postcodeMatch.town]
+                  .filter(Boolean)
+                  .join(', ')}
+              </span>
+              . Now add your house number below.
+            </span>
+          </div>
         )}
-        {field.postcodeLookup && !postcodeBusy && (
-          <MapPin className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+        {postcodeNotFound && (
+          <p className="text-xs text-brand-error">
+            We couldn&apos;t find that postcode. Type your address manually below.
+          </p>
         )}
       </div>
+    );
+  } else {
+    control = (
+      <input
+        id={`f-${field.id}`}
+        name={field.id}
+        type={field.type}
+        inputMode={inputMode}
+        autoComplete={autoComplete}
+        required={field.required}
+        placeholder={field.placeholder}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className={baseInputClass}
+      />
     );
   }
 
   return (
     <div>
-      <label htmlFor={`f-${field.id}`} className="label">
+      <label
+        htmlFor={`f-${field.id}`}
+        className="block text-sm font-semibold text-slate-700 mb-2"
+      >
         {field.label}
         {field.required && <span className="text-brand-error ml-0.5">*</span>}
       </label>
@@ -360,11 +480,36 @@ function FieldRow({
 }
 
 // ---------------------------------------------------------------------------
+// Native fill / keyboard hints — make iOS + Android prefill from saved data.
+// ---------------------------------------------------------------------------
+const AUTOCOMPLETE_BY_FIELD: Record<string, string> = {
+  full_name: 'name',
+  email: 'email',
+  mobile_number: 'tel',
+  date_of_birth: 'bday',
+  address_line_1: 'address-line1',
+  address_line_2: 'address-line2',
+  postcode: 'postal-code',
+  emergency_contact_number: 'tel',
+};
+
+const INPUT_MODE_BY_FIELD: Record<string, React.HTMLAttributes<unknown>['inputMode']> = {
+  mobile_number: 'tel',
+  emergency_contact_number: 'tel',
+  email: 'email',
+};
+
+const INPUT_MODE_BY_TYPE: Record<string, React.HTMLAttributes<unknown>['inputMode']> = {
+  tel: 'tel',
+  email: 'email',
+};
+
+// ---------------------------------------------------------------------------
 // Confirmation screen
 // ---------------------------------------------------------------------------
 function ThanksScreen({ practiceName }: { practiceName: string }) {
   return (
-    <div className="flex-1 flex items-center justify-center px-6">
+    <div className="flex-1 flex flex-col items-center justify-center px-6 py-10">
       <div className="text-center max-w-sm animate-pop-in">
         <div className="w-20 h-20 mx-auto rounded-full bg-emerald-100 flex items-center justify-center mb-6">
           <svg viewBox="0 0 36 36" className="w-10 h-10 text-brand-success">
@@ -385,6 +530,23 @@ function ThanksScreen({ practiceName }: { practiceName: string }) {
           Your details have been sent to {practiceName}.
         </p>
       </div>
+
+      {/* Soft viral CTA — only seen after a successful submission, when the
+          patient is feeling positive. Keeps the practice front of mind first. */}
+      <a
+        href="https://popform.io"
+        target="_blank"
+        rel="noreferrer noopener"
+        className="mt-10 inline-flex items-center gap-2 px-4 py-2 rounded-full
+                   bg-white border border-slate-200 shadow-sm
+                   hover:border-indigo-200 hover:shadow transition group"
+      >
+        <span className="w-4 h-4 rounded-[5px] bg-gradient-to-br from-brand-primary to-brand-accent" />
+        <span className="text-xs text-slate-600">
+          Want this for your practice?{' '}
+          <span className="font-semibold text-brand-primary">Popform.io</span>
+        </span>
+      </a>
     </div>
   );
 }

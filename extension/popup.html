@@ -10,7 +10,7 @@
     <section id="screen-login" class="screen" hidden>
       <header class="brand">
         <span class="brand-mark"></span>
-        <span class="brand-name">Popform</span>
+        <span class="brand-name" data-brand-name>Popform</span>
       </header>
 
       <form id="login-form" autocomplete="on">
@@ -36,14 +36,32 @@
       <header class="topbar">
         <div class="brand small">
           <span class="brand-mark"></span>
-          <span class="brand-name">Popform</span>
+          <span class="brand-name" data-brand-name>Popform</span>
         </div>
-        <button id="signout" class="avatar" title="Sign out">
-          <span id="avatar-initial">·</span>
-        </button>
+        <div class="topbar-actions">
+          <button id="open-settings" class="icon-btn" title="Settings" hidden>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+            </svg>
+          </button>
+          <button id="signout" class="avatar" title="Sign out">
+            <span id="avatar-initial">·</span>
+          </button>
+        </div>
       </header>
 
       <h1 id="practice-name" class="practice-name">Loading…</h1>
+
+      <!-- Billing strip — shows current plan + SMS usage. -->
+      <div id="billing-strip" class="billing-strip" hidden>
+        <div class="billing-row">
+          <span id="billing-plan" class="billing-plan">Free</span>
+          <span id="billing-usage" class="billing-usage">0 / 10</span>
+        </div>
+        <div class="billing-bar"><div id="billing-bar-fill" class="billing-bar-fill"></div></div>
+      </div>
 
       <!-- Phone input -->
       <div id="state-input" class="state">
@@ -83,6 +101,62 @@
         <ul id="result-fields" class="fields"></ul>
         <button class="btn-primary full" id="send-another">Send another</button>
       </div>
+    </section>
+
+    <!-- Settings screen (admins only) -->
+    <section id="screen-settings" class="screen" hidden>
+      <header class="topbar">
+        <button id="settings-back" class="icon-btn" title="Back">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+        </button>
+        <p class="settings-title">Settings</p>
+        <div style="width:28px"></div>
+      </header>
+
+      <form id="settings-form">
+        <p id="settings-loading" class="muted-line">Loading…</p>
+
+        <fieldset id="settings-fields" disabled hidden>
+          <h3 class="section-h">Practice</h3>
+          <label class="label" for="ws-name">Practice name</label>
+          <input class="input" id="ws-name" />
+
+          <h3 class="section-h">Twilio</h3>
+          <p class="muted-line">Where patient SMS messages are sent from.</p>
+          <label class="label" for="ws-tw-sid">Account SID</label>
+          <input class="input" id="ws-tw-sid" autocomplete="off" spellcheck="false" />
+          <label class="label" for="ws-tw-token">Auth Token</label>
+          <input class="input" id="ws-tw-token" type="password" autocomplete="off" />
+          <label class="label" for="ws-tw-from">From Number (e.g. +447…)</label>
+          <input class="input" id="ws-tw-from" placeholder="+44…" />
+
+          <h3 class="section-h">Pusher</h3>
+          <p class="muted-line">Realtime delivery for completed forms.</p>
+          <label class="label" for="ws-ps-app">App ID</label>
+          <input class="input" id="ws-ps-app" />
+          <label class="label" for="ws-ps-key">Key</label>
+          <input class="input" id="ws-ps-key" />
+          <label class="label" for="ws-ps-secret">Secret</label>
+          <input class="input" id="ws-ps-secret" type="password" autocomplete="off" />
+          <label class="label" for="ws-ps-cluster">Cluster</label>
+          <input class="input" id="ws-ps-cluster" placeholder="eu" />
+
+          <h3 class="section-h">SMS template</h3>
+          <p class="muted-line">Use <code>{practice_name}</code> and <code>{link}</code>.</p>
+          <textarea class="input" id="ws-sms" rows="4"></textarea>
+
+          <p id="settings-error" class="error" hidden></p>
+
+          <button class="btn-primary full" id="settings-save" type="submit">
+            <span class="btn-label">Save</span>
+            <span class="spinner" aria-hidden="true"></span>
+          </button>
+          <span id="settings-saved" class="muted-line" hidden style="text-align:center;color:#22C55E;font-weight:600;margin-top:8px;display:block">Saved</span>
+        </fieldset>
+      </form>
     </section>
 
     <!-- Pusher client (loaded locally to satisfy MV3 CSP) -->

@@ -8,6 +8,7 @@
   const screens = {
     login: $('screen-login'),
     main: $('screen-main'),
+    settings: $('screen-settings'),
   };
   const states = {
     input: $('state-input'),
@@ -17,6 +18,7 @@
 
   let session = null;          // { access_token, refresh_token, ... }
   let workspace = null;        // { id, name, pusher_key, pusher_cluster }
+  let role = null;             // 'admin' | 'receptionist'
   let pusher = null;
   let activeChannel = null;
   let pendingE164 = null;
@@ -25,12 +27,22 @@
   // ---------------------------------------------------------------------
   // Boot
   // ---------------------------------------------------------------------
+  // Apply the brand name from config to every element marked [data-brand-name].
+  // Allows renaming the product by editing config.js only.
+  const brandName =
+    (window.POPFORM_CONFIG && window.POPFORM_CONFIG.BRAND_NAME) || 'Popform';
+  document.querySelectorAll('[data-brand-name]').forEach((el) => {
+    el.textContent = brandName;
+  });
+  document.title = brandName;
+
   init().catch(showFatalError);
 
   async function init() {
-    const stored = await chrome.storage.local.get(['session', 'workspace']);
+    const stored = await chrome.storage.local.get(['session', 'workspace', 'role']);
     session = stored.session || null;
     workspace = stored.workspace || null;
+    role = stored.role || null;
 
     if (session && workspace) {
       try {
@@ -52,6 +64,7 @@
       setState('input');
       $('practice-name').textContent = workspace?.name ?? 'Your practice';
       $('avatar-initial').textContent = (workspace?.name ?? 'P').slice(0, 1).toUpperCase();
+      $('open-settings').hidden = role !== 'admin';
       ensurePusher();
     }
   }
@@ -107,19 +120,112 @@
   async function refreshProfile() {
     const data = await PopformAPI.withFreshToken(session, (tok) => PopformAPI.getMe(tok));
     workspace = data.workspace;
-    await chrome.storage.local.set({ workspace });
+    role = data.user?.role ?? null;
+    renderBilling(data.billing);
+    await chrome.storage.local.set({ workspace, role });
+  }
+
+  function renderBilling(billing) {
+    const strip = $('billing-strip');
+    if (!billing) {
+      strip.hidden = true;
+      return;
+    }
+    strip.hidden = false;
+    $('billing-plan').textContent = billing.plan_name || billing.plan || 'Free';
+    $('billing-usage').textContent = `${billing.sms_used} / ${billing.sms_limit}`;
+    const pct = Math.min(
+      100,
+      Math.round((billing.sms_used / Math.max(billing.sms_limit, 1)) * 100)
+    );
+    const fill = $('billing-bar-fill');
+    fill.style.width = pct + '%';
+    fill.classList.toggle('warn', pct >= 90);
   }
 
   // ---------------------------------------------------------------------
   // Sign out
   // ---------------------------------------------------------------------
   $('signout').addEventListener('click', async () => {
-    await chrome.storage.local.remove(['session', 'workspace']);
+    await chrome.storage.local.remove(['session', 'workspace', 'role']);
     session = null;
     workspace = null;
+    role = null;
     teardownPusher();
     $('phone').value = '';
     showScreen('login');
+  });
+
+  // ---------------------------------------------------------------------
+  // Settings (admins only)
+  // ---------------------------------------------------------------------
+  $('open-settings').addEventListener('click', () => openSettings());
+  $('settings-back').addEventListener('click', () => showScreen('main'));
+
+  const SETTINGS_FIELDS = {
+    name: 'ws-name',
+    twilio_account_sid: 'ws-tw-sid',
+    twilio_auth_token: 'ws-tw-token',
+    twilio_from_number: 'ws-tw-from',
+    pusher_app_id: 'ws-ps-app',
+    pusher_key: 'ws-ps-key',
+    pusher_secret: 'ws-ps-secret',
+    pusher_cluster: 'ws-ps-cluster',
+    sms_template: 'ws-sms',
+  };
+
+  async function openSettings() {
+    showScreen('settings');
+    $('settings-loading').hidden = false;
+    $('settings-fields').hidden = true;
+    $('settings-error').hidden = true;
+    $('settings-saved').hidden = true;
+    try {
+      const data = await PopformAPI.withFreshToken(session, (tok) =>
+        PopformAPI.getWorkspace(tok)
+      );
+      const ws = data.workspace || {};
+      for (const [key, el] of Object.entries(SETTINGS_FIELDS)) {
+        $(el).value = ws[key] ?? '';
+      }
+      $('settings-loading').hidden = true;
+      $('settings-fields').hidden = false;
+      $('settings-fields').disabled = false;
+    } catch (err) {
+      $('settings-loading').textContent = friendlyError(err);
+    }
+  }
+
+  $('settings-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = $('settings-save');
+    const errEl = $('settings-error');
+    const savedEl = $('settings-saved');
+    errEl.hidden = true;
+    savedEl.hidden = true;
+    btn.classList.add('loading');
+    $('settings-fields').disabled = true;
+    try {
+      const patch = {};
+      for (const [key, el] of Object.entries(SETTINGS_FIELDS)) {
+        patch[key] = $(el).value.trim();
+      }
+      await PopformAPI.withFreshToken(session, (tok) =>
+        PopformAPI.updateWorkspace(tok, patch)
+      );
+      // Refresh local profile so the new practice name + Pusher key take effect.
+      await refreshProfile();
+      $('practice-name').textContent = workspace?.name ?? 'Your practice';
+      teardownPusher();
+      ensurePusher();
+      savedEl.hidden = false;
+    } catch (err) {
+      errEl.textContent = friendlyError(err);
+      errEl.hidden = false;
+    } finally {
+      btn.classList.remove('loading');
+      $('settings-fields').disabled = false;
+    }
   });
 
   // ---------------------------------------------------------------------
@@ -149,14 +255,21 @@
     sendBtn.disabled = true;
     const errEl = $('send-error');
     errEl.hidden = true;
+    // Subscribe BEFORE calling /api/send so we don't race the patient.
+    subscribeToPatient(e164);
+    pendingE164 = e164;
     try {
-      await PopformAPI.withFreshToken(session, (tok) => PopformAPI.sendForm(tok, e164));
-      pendingE164 = e164;
+      const result = await PopformAPI.withFreshToken(session, (tok) =>
+        PopformAPI.sendForm(tok, e164)
+      );
       $('waiting-sub').textContent =
-        'Waiting for ' + e164.replace(/^\+44/, '0').replace(/(\d{4})(\d{3})(\d{3})/, '$1 $2 $3') + ' to fill it in…';
-      subscribeToPatient(e164);
+        'Waiting for ' +
+        e164.replace(/^\+44/, '0').replace(/(\d{4})(\d{3})(\d{3})/, '$1 $2 $3') +
+        ' to fill it in…';
+      renderDevLink(result && result.dev_mode ? result.link : null);
       setState('waiting');
     } catch (err) {
+      unsubscribeFromPatient();
       errEl.textContent = friendlyError(err);
       errEl.hidden = false;
     } finally {
@@ -164,6 +277,31 @@
       sendBtn.disabled = false;
     }
   });
+
+  function renderDevLink(link) {
+    let host = document.getElementById('dev-link');
+    if (!link) {
+      if (host) host.remove();
+      return;
+    }
+    if (!host) {
+      host = document.createElement('div');
+      host.id = 'dev-link';
+      host.style.cssText =
+        'margin-top:12px;padding:10px 12px;border-radius:10px;background:#FEF3C7;border:1px solid #FDE68A;font-size:12px;color:#92400E;text-align:left';
+      $('state-waiting').appendChild(host);
+    }
+    host.innerHTML =
+      '<div style="font-weight:600;margin-bottom:4px">Dev mode (no Twilio)</div>' +
+      '<div>SMS not sent. Open the form yourself to test:</div>' +
+      '<a href="#" id="dev-link-open" style="color:#6366F1;font-weight:600;word-break:break-all;display:inline-block;margin-top:4px"></a>';
+    const a = host.querySelector('#dev-link-open');
+    a.textContent = link;
+    a.addEventListener('click', (e) => {
+      e.preventDefault();
+      chrome.tabs.create({ url: link });
+    });
+  }
 
   $('cancel-wait').addEventListener('click', () => {
     unsubscribeFromPatient();

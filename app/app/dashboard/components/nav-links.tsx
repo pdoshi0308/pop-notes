@@ -8,6 +8,7 @@ import {
   Users,
   Settings,
   ClipboardList,
+  CreditCard,
 } from 'lucide-react';
 
 const ITEMS = [
@@ -15,6 +16,7 @@ const ITEMS = [
   { href: '/dashboard/form', label: 'Form Builder', icon: ClipboardList },
   { href: '/dashboard/sms', label: 'SMS Editor', icon: MessageSquareText },
   { href: '/dashboard/team', label: 'Team', icon: Users },
+  { href: '/dashboard/billing', label: 'Billing', icon: CreditCard },
   { href: '/dashboard/settings', label: 'Settings', icon: Settings },
 ];
 
