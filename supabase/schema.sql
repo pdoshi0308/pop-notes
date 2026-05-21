@@ -1,4 +1,4 @@
--- Popform database schema
+-- Pingform database schema
 -- Run this in the Supabase SQL editor of a fresh project.
 
 -- =========================================================================

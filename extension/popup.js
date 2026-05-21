@@ -30,7 +30,7 @@
   // Apply the brand name from config to every element marked [data-brand-name].
   // Allows renaming the product by editing config.js only.
   const brandName =
-    (window.POPFORM_CONFIG && window.POPFORM_CONFIG.BRAND_NAME) || 'Popform';
+    (window.POPFORM_CONFIG && window.POPFORM_CONFIG.BRAND_NAME) || 'Pingform';
   document.querySelectorAll('[data-brand-name]').forEach((el) => {
     el.textContent = brandName;
   });
@@ -79,7 +79,7 @@
     console.error('[Popform]', err);
     document.body.innerHTML =
       '<div style="padding:20px;font-family:Inter,sans-serif;color:#EF4444">' +
-      'Popform failed to start.<br>' +
+      brandName + ' failed to start.<br>' +
       (err && err.message ? err.message : err) +
       '</div>';
   }
@@ -287,19 +287,42 @@
     if (!host) {
       host = document.createElement('div');
       host.id = 'dev-link';
-      host.style.cssText =
-        'margin-top:12px;padding:10px 12px;border-radius:10px;background:#FEF3C7;border:1px solid #FDE68A;font-size:12px;color:#92400E;text-align:left';
+      host.className = 'dev-link';
       $('state-waiting').appendChild(host);
     }
-    host.innerHTML =
-      '<div style="font-weight:600;margin-bottom:4px">Dev mode (no Twilio)</div>' +
-      '<div>SMS not sent. Open the form yourself to test:</div>' +
-      '<a href="#" id="dev-link-open" style="color:#6366F1;font-weight:600;word-break:break-all;display:inline-block;margin-top:4px"></a>';
-    const a = host.querySelector('#dev-link-open');
-    a.textContent = link;
-    a.addEventListener('click', (e) => {
-      e.preventDefault();
-      chrome.tabs.create({ url: link });
+    const waMsg = encodeURIComponent(
+      `Hi, please fill in this quick registration form (1 minute): ${link}`
+    );
+    const smsBody = encodeURIComponent(
+      `Hi! Please fill in this quick registration form: ${link}`
+    );
+    host.innerHTML = `
+      <div class="dev-link-title">SMS not sent — share the link manually</div>
+      <div class="dev-link-actions">
+        <button type="button" class="share-btn" data-action="copy">📋 Copy</button>
+        <button type="button" class="share-btn" data-action="whatsapp">💬 WhatsApp</button>
+        <button type="button" class="share-btn" data-action="sms">📱 SMS</button>
+      </div>
+      <a href="#" class="dev-link-url" data-action="open"></a>
+    `;
+    host.querySelector('.dev-link-url').textContent = link;
+
+    host.querySelectorAll('[data-action]').forEach((el) => {
+      el.addEventListener('click', async (e) => {
+        e.preventDefault();
+        const action = el.getAttribute('data-action');
+        if (action === 'copy') {
+          await navigator.clipboard.writeText(link);
+          el.textContent = '✓ Copied';
+          setTimeout(() => (el.textContent = '📋 Copy'), 1500);
+        } else if (action === 'whatsapp') {
+          chrome.tabs.create({ url: `https://wa.me/?text=${waMsg}` });
+        } else if (action === 'sms') {
+          chrome.tabs.create({ url: `sms:?&body=${smsBody}` });
+        } else if (action === 'open') {
+          chrome.tabs.create({ url: link });
+        }
+      });
     });
   }
 

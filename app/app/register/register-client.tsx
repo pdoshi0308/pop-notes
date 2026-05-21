@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import type { FieldDefinition } from '@/lib/fields';
 import { formatUkMobile } from '@/lib/phone';
+import { BRAND, brandUrl } from '@/lib/brand';
 
 type ResolvedField = FieldDefinition & { required: boolean };
 type WorkspaceInfo = { id: string; name: string };
@@ -534,7 +535,7 @@ function ThanksScreen({ practiceName }: { practiceName: string }) {
       {/* Soft viral CTA — only seen after a successful submission, when the
           patient is feeling positive. Keeps the practice front of mind first. */}
       <a
-        href="https://popform.io"
+        href={brandUrl()}
         target="_blank"
         rel="noreferrer noopener"
         className="mt-10 inline-flex items-center gap-2 px-4 py-2 rounded-full
@@ -544,7 +545,7 @@ function ThanksScreen({ practiceName }: { practiceName: string }) {
         <span className="w-4 h-4 rounded-[5px] bg-gradient-to-br from-brand-primary to-brand-accent" />
         <span className="text-xs text-slate-600">
           Want this for your practice?{' '}
-          <span className="font-semibold text-brand-primary">Popform.io</span>
+          <span className="font-semibold text-brand-primary">{BRAND.domain}</span>
         </span>
       </a>
     </div>

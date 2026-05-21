@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseAdminClient } from '@/lib/supabase-server';
 import { getStripe, stripeConfigured } from '@/lib/stripe';
+import { brandUrl } from '@/lib/brand';
 
 export const runtime = 'nodejs';
 
@@ -45,7 +46,7 @@ export async function POST(req: NextRequest) {
     }
 
     const stripe = getStripe()!;
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://popform.io';
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? brandUrl();
     const portal = await stripe.billingPortal.sessions.create({
       customer: ws.stripe_customer_id,
       return_url: `${appUrl}/dashboard`,

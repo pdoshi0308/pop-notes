@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseAdminClient } from '@/lib/supabase-server';
 import { getStripe, stripeConfigured } from '@/lib/stripe';
 import { PLAN_BY_ID, type PlanId } from '@/lib/plans';
+import { brandUrl } from '@/lib/brand';
 
 export const runtime = 'nodejs';
 
@@ -57,7 +58,7 @@ export async function POST(req: NextRequest) {
     if (!ws) return jsonError('Workspace not found', 404);
 
     const stripe = getStripe()!;
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://popform.io';
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? brandUrl();
 
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',

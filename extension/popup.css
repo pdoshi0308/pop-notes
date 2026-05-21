@@ -194,6 +194,50 @@ fieldset[disabled] .btn-primary {
 }
 .billing-bar-fill.warn { background: var(--error); }
 
+/* Dev-mode share box ------------------------------------------------- */
+.dev-link {
+  margin-top: 14px;
+  padding: 12px;
+  border-radius: 12px;
+  background: #FEF3C7;
+  border: 1px solid #FDE68A;
+  text-align: left;
+}
+.dev-link-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #92400E;
+  margin-bottom: 8px;
+}
+.dev-link-actions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.share-btn {
+  padding: 8px 6px;
+  border-radius: 8px;
+  border: 1px solid #FDE68A;
+  background: white;
+  color: #92400E;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 120ms ease, transform 80ms ease;
+}
+.share-btn:hover { background: #FFFBEB; }
+.share-btn:active { transform: scale(0.97); }
+.dev-link-url {
+  display: block;
+  font-size: 11px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: #6366F1;
+  word-break: break-all;
+  text-decoration: none;
+}
+.dev-link-url:hover { text-decoration: underline; }
+
 /* Form controls ------------------------------------------------------- */
 .label {
   display: block;

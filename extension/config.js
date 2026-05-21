@@ -7,7 +7,7 @@
  */
 window.POPFORM_CONFIG = {
   // Brand — change here once to rename the extension UI.
-  BRAND_NAME: 'Popform',
+  BRAND_NAME: 'Pingform',
 
   SUPABASE_URL: 'https://usgdjgbuuhamlczospio.supabase.co',
   SUPABASE_ANON_KEY: 'sb_publishable_6Wjxls37PcIxHAE8PrMpJQ_29foBFek',

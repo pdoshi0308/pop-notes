@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { createSupabaseBrowserClient } from '@/lib/supabase-browser';
+import { BRAND } from '@/lib/brand';
 
 const VARIABLES = [
   { token: '{practice_name}', label: 'Practice name' },
@@ -55,7 +56,7 @@ export default function SmsEditor({
 
   const preview = body
     .replaceAll('{practice_name}', practiceName)
-    .replaceAll('{link}', 'popform.io/register?…');
+    .replaceAll('{link}', `${BRAND.domain}/register?…`);
 
   return (
     <div className="px-8 py-10 max-w-5xl">

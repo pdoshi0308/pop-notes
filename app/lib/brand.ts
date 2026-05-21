@@ -7,7 +7,7 @@
 
 export const BRAND = {
   /** Product name. Change here once and the whole app updates. */
-  name: 'Popform',
+  name: 'Pingform',
 
   /** Short positioning line — shows under the wordmark on marketing. */
   tagline: 'SMS-driven patient registration for UK practices',
@@ -17,10 +17,10 @@ export const BRAND = {
     'Send a patient registration form by SMS while they are still on the phone. Receive completed details back in real time.',
 
   /** Production domain (no scheme). Used in marketing copy + email signatures. */
-  domain: 'popform.io',
+  domain: 'pingform.io',
 
   /** Support email shown in the dashboard + landing footer. */
-  supportEmail: 'support@popform.io',
+  supportEmail: 'support@pingform.io',
 
   /** Marketing nav links. Each entry is { label, href }. */
   nav: [

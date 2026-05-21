@@ -3,6 +3,7 @@ import twilio from 'twilio';
 import { createSupabaseAdminClient } from '@/lib/supabase-server';
 import { toE164 } from '@/lib/phone';
 import { PLAN_BY_ID, type PlanId } from '@/lib/plans';
+import { brandUrl } from '@/lib/brand';
 
 export const runtime = 'nodejs';
 
@@ -104,7 +105,7 @@ export async function POST(req: NextRequest) {
     const from =
       ws.twilio_from_number || process.env.TWILIO_FROM_NUMBER || '';
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://popform.io';
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? brandUrl();
     const link = `${appUrl}/register?workspace=${ws.id}&ref=${encodeURIComponent(
       e164.replace(/^\+/, '')
     )}`;

@@ -1,4 +1,4 @@
-# Popform
+# Pingform
 
 > SMS-driven patient registration for UK medical and dental practices.
 
@@ -24,7 +24,7 @@ Everything else reads from those two files (landing page, dashboard, extension c
 
 ## How it works
 
-1. **Receptionist** opens the Popform side panel in Chrome, types the patient's mobile, clicks **Send Form**.
+1. **Receptionist** opens the Pingform side panel in Chrome, types the patient's mobile, clicks **Send Form**.
 2. **`/api/send`** validates the user's plan + SMS quota, then sends an SMS via Twilio with a link to `popform.io/register?workspace=…&ref=…`.
 3. **Patient** fills the mobile-optimised form (postcode lookup, native autofill).
 4. **`/api/submit`** fires a Pusher event on a channel keyed to the patient's number.
@@ -58,7 +58,7 @@ When ready for production, repeat in live mode.
 
 ## 3. Twilio setup
 
-Popform uses a **central Twilio account** that pays for every customer's SMS. Each workspace's monthly allowance is enforced by `/api/send`.
+Pingform uses a **central Twilio account** that pays for every customer's SMS. Each workspace's monthly allowance is enforced by `/api/send`.
 
 1. Sign up at <https://twilio.com>.
 2. Buy a UK mobile SMS-enabled number in E.164 format (`+447…`).

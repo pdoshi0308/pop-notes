@@ -1,5 +1,6 @@
 import { Suspense } from 'react';
 import RegisterClient from './register-client';
+import { BRAND, brandUrl } from '@/lib/brand';
 
 export default function RegisterPage() {
   return (
@@ -8,13 +9,12 @@ export default function RegisterPage() {
         <RegisterClient />
       </Suspense>
 
-      {/* Branded footer — visible to every patient who fills the form.
-          The CTA only shows on the patient form itself, not so loud as to
-          distract from the practice's own brand at the top. */}
-      <footer className="px-5 pt-6 pb-8 flex flex-col items-center gap-1.5"
-              style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 2rem)' }}>
+      <footer
+        className="px-5 pt-6 pb-8 flex flex-col items-center gap-1.5"
+        style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 2rem)' }}
+      >
         <a
-          href="https://popform.io"
+          href={brandUrl()}
           target="_blank"
           rel="noreferrer noopener"
           className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-brand-primary transition group"
@@ -25,10 +25,10 @@ export default function RegisterPage() {
           />
           Powered by{' '}
           <span className="font-semibold text-slate-700 group-hover:text-brand-primary transition">
-            Popform
+            {BRAND.name}
           </span>
         </a>
-        <p className="text-[11px] text-slate-400">SMS patient forms for UK practices</p>
+        <p className="text-[11px] text-slate-400">{BRAND.tagline}</p>
       </footer>
     </main>
   );

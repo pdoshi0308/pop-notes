@@ -1,10 +1,10 @@
 {
   "manifest_version": 3,
-  "name": "Popform",
+  "name": "Pingform",
   "version": "1.1.0",
   "description": "Send a patient registration form over SMS and receive the details back in real time.",
   "action": {
-    "default_title": "Popform",
+    "default_title": "Pingform",
     "default_icon": {
       "16": "icons/icon16.png",
       "48": "icons/icon48.png",
