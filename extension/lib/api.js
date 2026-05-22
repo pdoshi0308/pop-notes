@@ -88,8 +88,11 @@
         /401|invalid|expired|jwt/i.test(msg);
       if (!looksLikeAuthIssue || !session.refresh_token) throw err;
       const refreshed = await refresh(session.refresh_token);
-      // Persist the refreshed session for callers.
+      // Persist the refreshed session AND update the caller's in-memory copy.
+      // Supabase rotates refresh tokens, so the old one is now spent — mutating
+      // the live object keeps the next call from refreshing with a dead token.
       await chrome.storage.local.set({ session: refreshed });
+      Object.assign(session, refreshed);
       return await fn(refreshed.access_token);
     }
   }

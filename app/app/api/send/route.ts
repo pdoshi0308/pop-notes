@@ -124,7 +124,24 @@ export async function POST(req: NextRequest) {
       .replaceAll('{link}', link);
 
     const client = twilio(sid, tok);
-    await client.messages.create({ to: e164, from, body });
+    try {
+      await client.messages.create({ to: e164, from, body });
+    } catch (twErr) {
+      const code = (twErr as { code?: number })?.code;
+      const raw = (twErr as { message?: string })?.message ?? 'request rejected';
+      console.error('[/api/send] Twilio error', code, raw);
+      const hint =
+        code === 20003
+          ? 'Twilio rejected the credentials (auth failed). Check the Account SID (must start with "AC") and Auth Token in Settings.'
+          : code === 21608
+          ? 'This number is unverified. Twilio trial accounts can only text numbers you have verified in the Twilio console.'
+          : code === 21606 || code === 21659 || code === 21210
+          ? 'Your Twilio "from" number cannot send SMS to this destination. Use an SMS-capable number on your account.'
+          : code === 21211 || code === 21614
+          ? 'That is not a valid SMS-capable phone number.'
+          : `SMS provider error (${code ?? 'unknown'}): ${raw}`;
+      return NextResponse.json({ ok: false, error: hint, provider_code: code }, { status: 502 });
+    }
 
     // Increment the usage counter. Best-effort — if it fails, the SMS still went.
     await admin

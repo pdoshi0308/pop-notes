@@ -45,15 +45,32 @@
     role = stored.role || null;
 
     if (session && workspace) {
-      try {
-        await refreshProfile();
-        showScreen('main');
-        return;
-      } catch {
-        // fall through to login
-      }
+      // Show the main screen immediately from cached data. A transient server
+      // or network error must never bounce a signed-in user back to login —
+      // only an irrecoverable session (rejected refresh token) should.
+      showScreen('main');
+      refreshProfile().catch((err) => {
+        if (isSessionExpired(err)) {
+          clearSession();
+          showScreen('login');
+        }
+      });
+      return;
     }
     showScreen('login');
+  }
+
+  function isSessionExpired(err) {
+    const m = (err && err.message) || '';
+    return /refresh.?token|invalid.?grant|not.*found|bad_jwt/i.test(m);
+  }
+
+  function clearSession() {
+    chrome.storage.local.remove(['session', 'workspace', 'role']);
+    session = null;
+    workspace = null;
+    role = null;
+    teardownPusher();
   }
 
   function showScreen(name) {
@@ -146,12 +163,8 @@
   // ---------------------------------------------------------------------
   // Sign out
   // ---------------------------------------------------------------------
-  $('signout').addEventListener('click', async () => {
-    await chrome.storage.local.remove(['session', 'workspace', 'role']);
-    session = null;
-    workspace = null;
-    role = null;
-    teardownPusher();
+  $('signout').addEventListener('click', () => {
+    clearSession();
     $('phone').value = '';
     showScreen('login');
   });
@@ -490,8 +503,9 @@
   function friendlyError(err) {
     const m = err && err.message ? err.message : 'Something went wrong.';
     if (/invalid login/i.test(m)) return 'That email or password didn\'t work.';
-    if (/twilio/i.test(m)) return 'SMS could not be sent — check Twilio settings.';
     if (/realtime/i.test(m)) return 'Realtime keys missing — check Pusher settings.';
+    // The /api/send endpoint already returns specific, user-readable messages
+    // (e.g. Twilio auth/verification failures) — surface them as-is.
     return m;
   }
 })();
