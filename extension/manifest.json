@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Pingform",
   "version": "1.1.0",
-  "description": "Send a patient registration form over SMS and receive the details back in real time.",
+  "description": "Text clients a registration form and receive their completed details back in real time.",
   "action": {
     "default_title": "Pingform",
     "default_icon": {
@@ -27,12 +27,10 @@
     "https://*.supabase.co/*",
     "https://pingform.io/*",
     "https://*.pingform.io/*",
-    "https://pop-notes.vercel.app/*",
-    "http://localhost:3000/*",
     "https://*.pusher.com/*",
     "wss://*.pusher.com/*"
   ],
   "content_security_policy": {
-    "extension_pages": "script-src 'self'; object-src 'self'; connect-src 'self' https://*.supabase.co https://pingform.io https://*.pingform.io https://pop-notes.vercel.app http://localhost:3000 https://*.pusher.com wss://*.pusher.com https://*.pusherapp.com wss://*.pusherapp.com;"
+    "extension_pages": "script-src 'self'; object-src 'self'; connect-src 'self' https://*.supabase.co https://pingform.io https://*.pingform.io https://*.pusher.com wss://*.pusher.com https://*.pusherapp.com wss://*.pusherapp.com;"
   }
 }
