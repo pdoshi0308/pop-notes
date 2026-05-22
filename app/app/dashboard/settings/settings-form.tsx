@@ -77,8 +77,8 @@ export default function SettingsForm({
         </div>
       </div>
 
-      <Section title="Practice">
-        <Field label="Practice name">
+      <Section title="Business">
+        <Field label="Business name">
           <input
             className="input"
             value={form.name ?? ''}
@@ -90,7 +90,7 @@ export default function SettingsForm({
 
       <Section
         title="Twilio"
-        subtitle="Where your patient SMS messages will be sent from."
+        subtitle="Where your client SMS messages will be sent from."
       >
         <Field label="Account SID">
           <input

@@ -148,7 +148,7 @@ export default function FormBuilder({
                 {available.map((f) => (
                   <li key={f.id}>
                     <button
-                      className="w-full flex items-center justify-between p-3 rounded-xl border border-dashed border-slate-300 hover:border-brand-primary hover:bg-indigo-50/40 transition text-left"
+                      className="w-full flex items-center justify-between p-3 rounded-xl border border-dashed border-slate-300 hover:border-brand-primary hover:bg-rose-50/40 transition text-left"
                       onClick={() => addField(f.id)}
                     >
                       <div>
@@ -267,9 +267,9 @@ function PhonePreview({ entries }: { entries: BuilderEntry[] }) {
     <div className="mx-auto w-[300px] rounded-[36px] border border-slate-200 bg-white p-3 shadow-card">
       <div className="rounded-[28px] bg-brand-bg p-4 h-[520px] overflow-y-auto">
         <p className="text-xs uppercase tracking-wider text-slate-400 font-semibold">
-          Patient registration
+          Registration
         </p>
-        <h3 className="text-lg font-bold mt-1 mb-3">Your Practice</h3>
+        <h3 className="text-lg font-bold mt-1 mb-3">Your Business</h3>
         <div className="space-y-3">
           {entries.slice(0, 6).map((entry) => {
             const def = FIELD_BY_ID[entry.id];

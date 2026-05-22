@@ -51,7 +51,7 @@ export default async function DashboardLayout({
             <span className="w-7 h-7 rounded-lg bg-gradient-to-br from-brand-primary to-brand-accent" />
             {BRAND.name}
           </Link>
-          <p className="mt-3 text-xs text-slate-500">{workspace?.name ?? 'Practice'}</p>
+          <p className="mt-3 text-xs text-slate-500">{workspace?.name ?? 'Business'}</p>
         </div>
         <NavLinks role={profile?.role ?? 'admin'} />
         <div className="mt-auto p-4 border-t border-slate-100">

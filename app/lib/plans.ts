@@ -32,7 +32,7 @@ export const PLANS: Plan[] = [
     name: 'Free',
     price_gbp: 0,
     sms_limit: 10,
-    tagline: 'Try it on a few patients',
+    tagline: 'Try it on a few clients',
     features: [
       '10 SMS forms / month',
       'Real-time submissions',
@@ -46,7 +46,7 @@ export const PLANS: Plan[] = [
     price_gbp: 29,
     sms_limit: 150,
     stripePriceId: process.env.STRIPE_PRICE_STARTER,
-    tagline: 'For small practices',
+    tagline: 'For small businesses',
     features: [
       '150 SMS forms / month',
       'Real-time submissions',
@@ -60,7 +60,7 @@ export const PLANS: Plan[] = [
     price_gbp: 79,
     sms_limit: 500,
     stripePriceId: process.env.STRIPE_PRICE_PRO,
-    tagline: 'For busy multi-chair practices',
+    tagline: 'For busy teams',
     features: [
       '500 SMS forms / month',
       'Everything in Starter',
@@ -71,7 +71,7 @@ export const PLANS: Plan[] = [
   },
   {
     id: 'practice',
-    name: 'Practice',
+    name: 'Business',
     price_gbp: 149,
     sms_limit: 1500,
     stripePriceId: process.env.STRIPE_PRICE_PRACTICE,

@@ -55,7 +55,7 @@ export default function DashboardLogin() {
 
         <h1 className="text-xl font-semibold text-center">Sign in</h1>
         <p className="text-sm text-slate-500 text-center mt-1 mb-6">
-          Practice admin dashboard
+          Admin dashboard
         </p>
 
         <button
@@ -108,11 +108,11 @@ export default function DashboardLogin() {
         <p className="text-xs text-center text-slate-500 mt-6">
           No account?{' '}
           <Link href="/signup" className="text-brand-primary font-medium">
-            Create your practice
+            Create your account
           </Link>
         </p>
         <p className="text-[11px] text-center text-slate-400 mt-2">
-          Receptionists sign in through the Chrome extension.
+          Team members sign in through the Chrome extension.
         </p>
       </div>
     </main>

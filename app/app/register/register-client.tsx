@@ -212,7 +212,7 @@ export default function RegisterClient() {
   }
 
   if (submitted) {
-    return <ThanksScreen practiceName={workspace?.name ?? 'the practice'} />;
+    return <ThanksScreen businessName={workspace?.name ?? 'us'} />;
   }
 
   const progress = ((step + 1) / steps.length) * 100;
@@ -223,7 +223,7 @@ export default function RegisterClient() {
       {/* Sticky header with progress */}
       <header className="sticky top-0 z-10 bg-brand-bg/95 backdrop-blur px-5 pt-6 pb-3 border-b border-slate-100">
         <p className="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">
-          Patient registration
+          Registration
         </p>
         <h1 className="text-xl font-bold mt-0.5">{workspace?.name}</h1>
         {steps.length > 1 && (
@@ -395,6 +395,50 @@ function FieldRow({
         })}
       </div>
     );
+  } else if (field.type === 'date') {
+    // Typed day / month / year — faster on mobile than a native calendar.
+    const [dd = '', mm = '', yyyy = ''] = (value || '').split('/');
+    const setPart = (index: number, raw: string) => {
+      const parts = [dd, mm, yyyy];
+      parts[index] = raw.replace(/\D/g, '');
+      onChange(parts.every((p) => p === '') ? '' : parts.join('/'));
+    };
+    const dobBox = baseInputClass + ' text-center tracking-wider';
+    control = (
+      <div className="grid grid-cols-[1fr_1fr_1.4fr] gap-2.5">
+        <input
+          id={`f-${field.id}`}
+          inputMode="numeric"
+          autoComplete="bday-day"
+          placeholder="DD"
+          maxLength={2}
+          required={field.required}
+          value={dd}
+          onChange={(e) => setPart(0, e.target.value)}
+          className={dobBox}
+        />
+        <input
+          inputMode="numeric"
+          autoComplete="bday-month"
+          placeholder="MM"
+          maxLength={2}
+          required={field.required}
+          value={mm}
+          onChange={(e) => setPart(1, e.target.value)}
+          className={dobBox}
+        />
+        <input
+          inputMode="numeric"
+          autoComplete="bday-year"
+          placeholder="YYYY"
+          maxLength={4}
+          required={field.required}
+          value={yyyy}
+          onChange={(e) => setPart(2, e.target.value)}
+          className={dobBox}
+        />
+      </div>
+    );
   } else if (field.postcodeLookup) {
     // Postcode field gets an inline Find button + result indicator.
     control = (
@@ -508,7 +552,7 @@ const INPUT_MODE_BY_TYPE: Record<string, React.HTMLAttributes<unknown>['inputMod
 // ---------------------------------------------------------------------------
 // Confirmation screen
 // ---------------------------------------------------------------------------
-function ThanksScreen({ practiceName }: { practiceName: string }) {
+function ThanksScreen({ businessName }: { businessName: string }) {
   return (
     <div className="flex-1 flex flex-col items-center justify-center px-6 py-10">
       <div className="text-center max-w-sm animate-pop-in">
@@ -528,7 +572,7 @@ function ThanksScreen({ practiceName }: { practiceName: string }) {
         </div>
         <h2 className="text-2xl font-bold mb-2">Thanks!</h2>
         <p className="text-slate-600">
-          Your details have been sent to {practiceName}.
+          Your details have been sent to {businessName}.
         </p>
       </div>
 
@@ -540,11 +584,11 @@ function ThanksScreen({ practiceName }: { practiceName: string }) {
         rel="noreferrer noopener"
         className="mt-10 inline-flex items-center gap-2 px-4 py-2 rounded-full
                    bg-white border border-slate-200 shadow-sm
-                   hover:border-indigo-200 hover:shadow transition group"
+                   hover:border-rose-200 hover:shadow transition group"
       >
         <span className="w-4 h-4 rounded-[5px] bg-gradient-to-br from-brand-primary to-brand-accent" />
         <span className="text-xs text-slate-600">
-          Want this for your practice?{' '}
+          Want this for your business?{' '}
           <span className="font-semibold text-brand-primary">{BRAND.domain}</span>
         </span>
       </a>

@@ -1,9 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 :root {
-  --primary: #6366F1;
-  --primary-600: #4f46e5;
-  --accent: #8B5CF6;
+  --primary: #E11D48;
+  --primary-600: #BE123C;
+  --accent: #F43F5E;
   --bg: #F8FAFC;
   --text: #0F172A;
   --muted: #64748B;
@@ -232,7 +232,7 @@ fieldset[disabled] .btn-primary {
   display: block;
   font-size: 11px;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  color: #6366F1;
+  color: var(--primary);
   word-break: break-all;
   text-decoration: none;
 }

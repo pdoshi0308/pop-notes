@@ -74,7 +74,7 @@ export default function SignupClient() {
           <h1 className="mt-4 text-xl font-bold">Check your email</h1>
           <p className="mt-2 text-sm text-slate-600">
             We&apos;ve sent a confirmation link to <strong>{email}</strong>.
-            Click it to finish setting up your practice.
+            Click it to finish setting up your account.
           </p>
         </div>
       </main>
@@ -91,15 +91,15 @@ export default function SignupClient() {
         </Link>
         <div>
           <h2 className="text-4xl font-extrabold tracking-tight leading-tight">
-            Save reception 5 minutes per new patient.
+            Save your team 5 minutes per new client.
           </h2>
-          <ul className="mt-6 space-y-2 text-indigo-100 text-sm">
+          <ul className="mt-6 space-y-2 text-rose-100 text-sm">
             <li>· Free for your first 10 SMS forms each month</li>
-            <li>· Real-time patient details inside Chrome</li>
+            <li>· Real-time client details inside Chrome</li>
             <li>· Set up in 5 minutes — no IT team required</li>
           </ul>
         </div>
-        <p className="text-xs text-indigo-200">
+        <p className="text-xs text-rose-200">
           {BRAND.name} · {BRAND.domain}
         </p>
       </aside>
@@ -114,7 +114,7 @@ export default function SignupClient() {
             <span className="w-7 h-7 rounded-lg bg-gradient-to-br from-brand-primary to-brand-accent" />
             {BRAND.name}
           </Link>
-          <h1 className="text-2xl font-bold tracking-tight">Create your practice</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Create your account</h1>
           <p className="text-sm text-slate-500 mt-1 mb-6">
             Free forever for up to 10 SMS forms / month.
           </p>
@@ -143,12 +143,12 @@ export default function SignupClient() {
                 required
               />
             </Field>
-            <Field label="Practice name">
+            <Field label="Business name">
               <input
                 className="input"
                 value={practice}
                 onChange={(e) => setPractice(e.target.value)}
-                placeholder="e.g. Smile Dental"
+                placeholder="e.g. Acme Studio"
                 autoComplete="organization"
                 required
               />

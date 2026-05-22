@@ -67,7 +67,7 @@ export default function TeamPanel({
     <div className="px-8 py-10 max-w-4xl">
       <h1 className="text-3xl font-bold tracking-tight">Team</h1>
       <p className="text-slate-600 mt-1">
-        Invite receptionists so they can sign into the Chrome extension.
+        Invite team members so they can sign into the Chrome extension.
       </p>
 
       {isAdmin && (
@@ -80,7 +80,7 @@ export default function TeamPanel({
             <input
               type="email"
               className="input"
-              placeholder="receptionist@yourpractice.co.uk"
+              placeholder="teammate@yourbusiness.co.uk"
               value={inviteEmail}
               onChange={(e) => setInviteEmail(e.target.value)}
               required
@@ -93,7 +93,7 @@ export default function TeamPanel({
               value={inviteRole}
               onChange={(e) => setInviteRole(e.target.value as 'admin' | 'receptionist')}
             >
-              <option value="receptionist">Receptionist</option>
+              <option value="receptionist">Team member</option>
               <option value="admin">Admin</option>
             </select>
           </div>

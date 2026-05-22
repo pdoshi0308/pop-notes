@@ -65,7 +65,7 @@
 
       <!-- Phone input -->
       <div id="state-input" class="state">
-        <label class="label" for="phone">Patient mobile</label>
+        <label class="label" for="phone">Client mobile</label>
         <input
           id="phone"
           class="input phone"
@@ -86,7 +86,7 @@
           <div class="pulse-dot"></div>
         </div>
         <p class="waiting-title">Form sent</p>
-        <p class="waiting-sub" id="waiting-sub">Waiting for the patient to fill it in…</p>
+        <p class="waiting-sub" id="waiting-sub">Waiting for the client to fill it in…</p>
         <button class="btn-ghost" id="cancel-wait">Send another</button>
       </div>
 
@@ -94,7 +94,7 @@
       <div id="state-result" class="state" hidden>
         <div class="result-header">
           <p class="result-title">
-            <span class="dot success"></span> Patient submitted
+            <span class="dot success"></span> Client submitted
           </p>
           <button class="btn-ghost small" id="copy-all">Copy all</button>
         </div>
@@ -120,12 +120,12 @@
         <p id="settings-loading" class="muted-line">Loading…</p>
 
         <fieldset id="settings-fields" disabled hidden>
-          <h3 class="section-h">Practice</h3>
-          <label class="label" for="ws-name">Practice name</label>
+          <h3 class="section-h">Business</h3>
+          <label class="label" for="ws-name">Business name</label>
           <input class="input" id="ws-name" />
 
           <h3 class="section-h">Twilio</h3>
-          <p class="muted-line">Where patient SMS messages are sent from.</p>
+          <p class="muted-line">Where client SMS messages are sent from.</p>
           <label class="label" for="ws-tw-sid">Account SID</label>
           <input class="input" id="ws-tw-sid" autocomplete="off" spellcheck="false" />
           <label class="label" for="ws-tw-token">Auth Token</label>

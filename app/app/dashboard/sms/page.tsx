@@ -25,7 +25,7 @@ export default async function SmsPage() {
   return (
     <SmsEditor
       workspaceId={profile.workspace_id}
-      practiceName={ws?.name ?? 'Your Practice'}
+      practiceName={ws?.name ?? 'Your Business'}
       initial={
         ws?.sms_template ||
         'Hi! {practice_name} has asked you to complete a quick registration form. It only takes 1 minute 👉 {link}'

@@ -10,11 +10,11 @@ export const BRAND = {
   name: 'Pingform',
 
   /** Short positioning line — shows under the wordmark on marketing. */
-  tagline: 'SMS-driven patient registration for UK practices',
+  tagline: 'SMS-driven client registration for any business',
 
   /** Longer description used for meta tags / og:description. */
   description:
-    'Send a patient registration form by SMS while they are still on the phone. Receive completed details back in real time.',
+    'Send a client registration form by SMS while they are still on the phone. Receive completed details back in real time.',
 
   /** Production domain (no scheme). Used in marketing copy + email signatures. */
   domain: 'pingform.io',

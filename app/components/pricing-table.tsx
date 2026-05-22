@@ -15,7 +15,7 @@ export function PricingTable() {
             className={[
               'card p-6 flex flex-col relative',
               plan.recommended
-                ? 'border-brand-primary ring-2 ring-indigo-100'
+                ? 'border-brand-primary ring-2 ring-rose-100'
                 : '',
             ].join(' ')}
           >
@@ -43,7 +43,7 @@ export function PricingTable() {
               className={[
                 'mt-6 inline-flex items-center justify-center py-3 rounded-xl font-semibold text-sm transition',
                 plan.recommended
-                  ? 'bg-brand-primary text-white hover:bg-indigo-600'
+                  ? 'bg-brand-primary text-white hover:bg-rose-700'
                   : 'bg-white border border-slate-200 hover:border-slate-300',
               ].join(' ')}
             >

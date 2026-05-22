@@ -11,5 +11,5 @@ window.POPFORM_CONFIG = {
 
   SUPABASE_URL: 'https://usgdjgbuuhamlczospio.supabase.co',
   SUPABASE_ANON_KEY: 'sb_publishable_6Wjxls37PcIxHAE8PrMpJQ_29foBFek',
-  API_BASE: 'http://localhost:3000',
+  API_BASE: 'https://pop-notes.vercel.app',
 };

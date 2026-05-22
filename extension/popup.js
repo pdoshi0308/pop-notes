@@ -79,7 +79,7 @@
     });
     if (name === 'main') {
       setState('input');
-      $('practice-name').textContent = workspace?.name ?? 'Your practice';
+      $('practice-name').textContent = workspace?.name ?? 'Your business';
       $('avatar-initial').textContent = (workspace?.name ?? 'P').slice(0, 1).toUpperCase();
       $('open-settings').hidden = role !== 'admin';
       ensurePusher();
@@ -228,7 +228,7 @@
       );
       // Refresh local profile so the new practice name + Pusher key take effect.
       await refreshProfile();
-      $('practice-name').textContent = workspace?.name ?? 'Your practice';
+      $('practice-name').textContent = workspace?.name ?? 'Your business';
       teardownPusher();
       ensurePusher();
       savedEl.hidden = false;

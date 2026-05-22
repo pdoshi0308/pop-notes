@@ -6,7 +6,7 @@ import { createSupabaseBrowserClient } from '@/lib/supabase-browser';
 import { BRAND } from '@/lib/brand';
 
 const VARIABLES = [
-  { token: '{practice_name}', label: 'Practice name' },
+  { token: '{practice_name}', label: 'Business name' },
   { token: '{link}', label: 'Form link' },
 ];
 
@@ -64,7 +64,7 @@ export default function SmsEditor({
         <div>
           <h1 className="text-3xl font-bold tracking-tight">SMS Editor</h1>
           <p className="text-slate-600 mt-1">
-            Customise what the patient sees when reception sends the form.
+            Customise what the client sees when your team sends the form.
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -95,7 +95,7 @@ export default function SmsEditor({
                   key={v.token}
                   type="button"
                   onClick={() => insertVariable(v.token)}
-                  className="text-xs px-2 py-1 rounded-full bg-indigo-50 text-brand-primary font-medium hover:bg-indigo-100"
+                  className="text-xs px-2 py-1 rounded-full bg-rose-50 text-brand-primary font-medium hover:bg-rose-100"
                   title={`Insert ${v.token}`}
                 >
                   {v.label}

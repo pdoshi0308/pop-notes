@@ -11,9 +11,9 @@ export default function HomePage() {
 
       {/* Hero ------------------------------------------------------------ */}
       <section className="px-5 sm:px-8 pt-16 pb-24 max-w-6xl mx-auto text-center">
-        <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 text-brand-primary text-sm font-medium">
+        <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-50 text-brand-primary text-sm font-medium">
           <span className="w-1.5 h-1.5 rounded-full bg-brand-primary animate-pulse" />
-          New for UK practices
+          New for UK businesses
         </span>
         <h1 className="mt-6 text-4xl sm:text-6xl font-extrabold tracking-tight leading-tight">
           Send registration forms{' '}
@@ -21,7 +21,7 @@ export default function HomePage() {
           get the details back instantly.
         </h1>
         <p className="mt-5 text-lg text-slate-600 max-w-2xl mx-auto">
-          {BRAND.name} lets your reception team text a patient a registration
+          {BRAND.name} lets your front desk text a client a registration
           form while they&apos;re on the phone — and watch the completed
           details appear inside Chrome the moment they hit submit.
         </p>
@@ -42,29 +42,29 @@ export default function HomePage() {
       <section id="features" className="px-5 sm:px-8 max-w-6xl mx-auto">
         <SectionHeader
           eyebrow="Features"
-          title="Built for the receptionist on a busy phone line"
-          sub="Every detail tuned for the moment a patient is already on hold."
+          title="Built for your front desk on a busy phone line"
+          sub="Every detail tuned for the moment a client is already on hold."
         />
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mt-10">
           <Feature
             icon={<MessageSquareText className="w-5 h-5" />}
             title="SMS form delivery"
-            body="Patients tap a link, fill it on their phone, no app needed."
+            body="Clients tap a link, fill it on their phone, no app needed."
           />
           <Feature
             icon={<Zap className="w-5 h-5" />}
             title="Real-time arrival"
-            body="The patient card animates into Chrome the second they hit submit."
+            body="The client card animates into Chrome the second they hit submit."
           />
           <Feature
             icon={<Smartphone className="w-5 h-5" />}
-            title="Mobile-first patient form"
+            title="Mobile-first client form"
             body="Multi-step, postcode lookup, native autofill — designed for thumbs."
           />
           <Feature
             icon={<ShieldCheck className="w-5 h-5" />}
             title="UK-built &amp; GDPR-ready"
-            body="Data lives in EU-hosted Supabase. Per-practice isolation by default."
+            body="Data lives in EU-hosted Supabase. Per-business isolation by default."
           />
         </div>
       </section>
@@ -74,28 +74,28 @@ export default function HomePage() {
         <SectionHeader
           eyebrow="How it works"
           title="Three taps to a completed registration"
-          sub="From phone call to filed patient details in under a minute."
+          sub="From phone call to filed client details in under a minute."
         />
         <ol className="grid md:grid-cols-3 gap-4 mt-10">
           {[
             {
               n: 1,
-              t: 'Reception types the number',
-              b: 'In the Chrome side panel, type the patient’s mobile and hit Send Form.',
+              t: 'Your team types the number',
+              b: 'In the Chrome side panel, type the client’s mobile and hit Send Form.',
             },
             {
               n: 2,
-              t: 'Patient gets a text',
+              t: 'Client gets a text',
               b: 'They tap the link and fill in a mobile-optimised form on their phone.',
             },
             {
               n: 3,
               t: 'Data lands in Chrome',
-              b: 'A patient card pops in with copy buttons. Paste straight into your PMS.',
+              b: 'A client card pops in with copy buttons. Paste straight into your system.',
             },
           ].map((step) => (
             <li key={step.n} className="card p-5">
-              <div className="w-9 h-9 rounded-full bg-indigo-50 text-brand-primary flex items-center justify-center font-bold">
+              <div className="w-9 h-9 rounded-full bg-rose-50 text-brand-primary flex items-center justify-center font-bold">
                 {step.n}
               </div>
               <h3 className="mt-4 font-semibold text-lg">{step.t}</h3>
@@ -109,7 +109,7 @@ export default function HomePage() {
       <section id="pricing" className="px-5 sm:px-8 max-w-6xl mx-auto mt-24">
         <SectionHeader
           eyebrow="Pricing"
-          title="Simple, per-practice pricing"
+          title="Simple, per-business pricing"
           sub="Start free. Upgrade when you outgrow the limit."
         />
         <div className="mt-10">
@@ -130,19 +130,19 @@ export default function HomePage() {
             a={`Yes. ${BRAND.name} handles SMS sending on every paid plan. Your monthly SMS allowance is included in the price.`}
           />
           <Faq
-            q="Does it work with my practice management software?"
-            a="Yes — the receptionist copies completed patient details from the Chrome extension into Dentally / SOE / R4 / iSmile / any PMS that takes typed input. A direct integration is on the roadmap."
+            q="Does it work with my existing software?"
+            a="Yes — your team copies completed details from the Chrome extension into your CRM, booking system, or any tool that takes typed input. A direct integration is on the roadmap."
           />
           <Faq
-            q="Can I customise which fields the patient sees?"
+            q="Can I customise which fields the client sees?"
             a="Yes. The dashboard's form builder lets you toggle fields on/off, mark them required, and reorder them with drag-and-drop."
           />
           <Faq
-            q="What if reception closes Chrome before the patient submits?"
-            a="The extension lives as a Chrome side panel so it stays open while reception switches tabs. If they fully close Chrome, the patient submission still arrives next time they open the panel (coming soon)."
+            q="What if my team closes Chrome before the client submits?"
+            a="The extension lives as a Chrome side panel so it stays open while your team switches tabs. If they fully close Chrome, the client submission still arrives next time they open the panel (coming soon)."
           />
           <Faq
-            q="Where is patient data stored?"
+            q="Where is client data stored?"
             a="In your own Supabase Postgres instance, hosted in the EU. We don't see the contents of submissions."
           />
         </div>
@@ -152,14 +152,14 @@ export default function HomePage() {
       <section className="px-5 sm:px-8 max-w-6xl mx-auto mt-24">
         <div className="rounded-3xl bg-gradient-to-br from-brand-primary to-brand-accent text-white p-8 sm:p-12 text-center">
           <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
-            Save reception 5 minutes per new patient.
+            Save your team 5 minutes per new client.
           </h2>
-          <p className="mt-3 text-indigo-100 max-w-xl mx-auto">
-            Try {BRAND.name} on your next 10 patients free. No credit card.
+          <p className="mt-3 text-rose-100 max-w-xl mx-auto">
+            Try {BRAND.name} on your next 10 clients free. No credit card.
           </p>
           <Link
             href="/signup"
-            className="mt-6 inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-white text-brand-primary font-semibold hover:bg-indigo-50 transition"
+            className="mt-6 inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-white text-brand-primary font-semibold hover:bg-rose-50 transition"
           >
             Start free <ArrowRight className="w-4 h-4" />
           </Link>
@@ -204,7 +204,7 @@ function Feature({
 }) {
   return (
     <div className="card p-5">
-      <div className="w-10 h-10 rounded-xl bg-indigo-50 text-brand-primary flex items-center justify-center">
+      <div className="w-10 h-10 rounded-xl bg-rose-50 text-brand-primary flex items-center justify-center">
         {icon}
       </div>
       <h3 className="mt-4 font-semibold">{title}</h3>

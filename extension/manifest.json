@@ -25,12 +25,12 @@
   "permissions": ["storage", "sidePanel"],
   "host_permissions": [
     "https://*.supabase.co/*",
-    "https://popform.io/*",
+    "https://pop-notes.vercel.app/*",
     "http://localhost:3000/*",
     "https://*.pusher.com/*",
     "wss://*.pusher.com/*"
   ],
   "content_security_policy": {
-    "extension_pages": "script-src 'self'; object-src 'self'; connect-src 'self' https://*.supabase.co https://popform.io http://localhost:3000 https://*.pusher.com wss://*.pusher.com https://*.pusherapp.com wss://*.pusherapp.com;"
+    "extension_pages": "script-src 'self'; object-src 'self'; connect-src 'self' https://*.supabase.co https://pop-notes.vercel.app http://localhost:3000 https://*.pusher.com wss://*.pusher.com https://*.pusherapp.com wss://*.pusherapp.com;"
   }
 }

@@ -35,7 +35,7 @@ export default function NavLinks({ role }: { role: string }) {
             className={[
               'flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition',
               active
-                ? 'bg-indigo-50 text-brand-primary'
+                ? 'bg-rose-50 text-brand-primary'
                 : 'text-slate-600 hover:bg-slate-50',
             ].join(' ')}
           >
@@ -46,7 +46,7 @@ export default function NavLinks({ role }: { role: string }) {
       })}
       {role !== 'admin' && (
         <p className="px-3 pt-3 text-xs text-slate-400">
-          You&apos;re signed in as a receptionist. Some sections may be read-only.
+          You&apos;re signed in as a team member. Some sections may be read-only.
         </p>
       )}
     </nav>
