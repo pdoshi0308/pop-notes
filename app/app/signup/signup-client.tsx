@@ -91,12 +91,17 @@ export default function SignupClient() {
         </Link>
         <div>
           <h2 className="text-4xl font-extrabold tracking-tight leading-tight">
-            Save your team 5 minutes per new client.
+            Get every client&apos;s details right the first time.
           </h2>
+          <p className="mt-4 text-rose-100">
+            Clients type their own details, so nothing&apos;s misheard, misspelt
+            or missed — and you skip the phone-call back-and-forth.
+          </p>
           <ul className="mt-6 space-y-2 text-rose-100 text-sm">
+            <li>· No misheard names or wrong numbers — accurate every time</li>
+            <li>· Forms come back complete, straight into Chrome in real time</li>
+            <li>· Capture what reception skips: how they heard, consent, custom fields</li>
             <li>· Free for your first 10 SMS forms each month</li>
-            <li>· Real-time client details inside Chrome</li>
-            <li>· Set up in 5 minutes — no IT team required</li>
           </ul>
         </div>
         <p className="text-xs text-rose-200">
