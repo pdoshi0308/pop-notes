@@ -89,8 +89,8 @@ export default function SettingsForm({
       </Section>
 
       <Section
-        title="Twilio"
-        subtitle="Where your client SMS messages will be sent from."
+        title="Twilio (optional)"
+        subtitle="Advanced: leave blank to send via our managed SMS. Only fill this in if you want to send from your own Twilio number."
       >
         <Field label="Account SID">
           <input
@@ -121,8 +121,8 @@ export default function SettingsForm({
       </Section>
 
       <Section
-        title="Pusher"
-        subtitle="Used to push completed form data back to the extension in real time."
+        title="Pusher (optional)"
+        subtitle="Advanced: leave blank to use our managed realtime. Only fill this in to use your own Pusher app."
       >
         <Field label="App ID">
           <input

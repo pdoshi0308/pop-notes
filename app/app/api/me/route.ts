@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseAdminClient } from '@/lib/supabase-server';
 import { PLAN_BY_ID, type PlanId } from '@/lib/plans';
+import { resolvePusherClient } from '@/lib/pusher';
 
 export const runtime = 'nodejs';
 
@@ -31,13 +32,14 @@ export async function GET(req: NextRequest) {
     const { data: ws } = await admin
       .from('workspaces')
       .select(
-        'id, name, pusher_key, pusher_cluster, plan, sms_used_this_period, period_start'
+        'id, name, pusher_app_id, pusher_key, pusher_secret, pusher_cluster, plan, sms_used_this_period, period_start'
       )
       .eq('id', profile.workspace_id)
       .maybeSingle();
     if (!ws) return jsonError('Workspace not found', 404);
 
     const plan: PlanId = ((ws.plan as PlanId) || 'free') as PlanId;
+    const pusherClient = resolvePusherClient(ws);
     return NextResponse.json({
       ok: true,
       user: {
@@ -48,8 +50,8 @@ export async function GET(req: NextRequest) {
       workspace: {
         id: ws.id,
         name: ws.name,
-        pusher_key: ws.pusher_key,
-        pusher_cluster: ws.pusher_cluster,
+        pusher_key: pusherClient.key,
+        pusher_cluster: pusherClient.cluster,
       },
       billing: {
         plan,

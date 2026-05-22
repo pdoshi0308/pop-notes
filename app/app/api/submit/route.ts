@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import Pusher from 'pusher';
 import { createSupabaseAdminClient } from '@/lib/supabase-server';
 import { channelForPhone, toE164 } from '@/lib/phone';
+import { resolvePusherServer, makePusher } from '@/lib/pusher';
 
 export const runtime = 'nodejs';
 
@@ -38,20 +38,12 @@ export async function POST(req: NextRequest) {
       .maybeSingle();
     if (wsErr || !ws) return jsonError('Workspace not found', 404);
 
-    if (!ws.pusher_app_id || !ws.pusher_key || !ws.pusher_secret || !ws.pusher_cluster) {
-      return jsonError(
-        'Realtime credentials are not configured for this workspace.',
-        400
-      );
+    const creds = resolvePusherServer(ws);
+    if (!creds) {
+      return jsonError('Realtime is not configured. Please contact support.', 400);
     }
 
-    const pusher = new Pusher({
-      appId: ws.pusher_app_id,
-      key: ws.pusher_key,
-      secret: ws.pusher_secret,
-      cluster: ws.pusher_cluster,
-      useTLS: true,
-    });
+    const pusher = makePusher(creds);
 
     const payload = {
       phone: e164,

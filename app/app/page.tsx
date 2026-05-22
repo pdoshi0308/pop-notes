@@ -1,5 +1,13 @@
 import Link from 'next/link';
-import { ArrowRight, MessageSquareText, Zap, ShieldCheck, Smartphone } from 'lucide-react';
+import {
+  ArrowRight,
+  MessageSquareText,
+  Zap,
+  ShieldCheck,
+  Smartphone,
+  TrendingUp,
+  ClipboardList,
+} from 'lucide-react';
 import { MarketingNav, MarketingFooter } from '@/components/marketing-nav';
 import { PricingTable } from '@/components/pricing-table';
 import { BRAND } from '@/lib/brand';
@@ -103,6 +111,44 @@ export default function HomePage() {
             </li>
           ))}
         </ol>
+      </section>
+
+      {/* The questions reception skips ----------------------------------- */}
+      <section className="px-5 sm:px-8 max-w-6xl mx-auto mt-24">
+        <div className="rounded-3xl border border-rose-100 bg-rose-50/50 p-8 sm:p-12">
+          <div className="grid lg:grid-cols-2 gap-10 items-center">
+            <div>
+              <p className="text-xs uppercase tracking-wider text-brand-primary font-semibold">
+                The hidden win
+              </p>
+              <h2 className="mt-2 text-3xl sm:text-4xl font-extrabold tracking-tight">
+                Ask the questions your front desk won&apos;t.
+              </h2>
+              <p className="mt-4 text-slate-600">
+                Reception is rushed, and some questions feel awkward to ask out
+                loud — so they get skipped, and you lose the data. The form asks
+                every client, every time. No friction, nothing forgotten.
+              </p>
+            </div>
+            <ul className="space-y-3">
+              <AskItem
+                icon={<TrendingUp className="w-5 h-5" />}
+                q="“How did you hear about us?”"
+                body="See which marketing actually brings clients in — captured on every signup instead of guessed."
+              />
+              <AskItem
+                icon={<ShieldCheck className="w-5 h-5" />}
+                q="Marketing &amp; contact consent"
+                body="Clean opt-ins you can act on, recorded with the submission for GDPR peace of mind."
+              />
+              <AskItem
+                icon={<ClipboardList className="w-5 h-5" />}
+                q="The details you always end up chasing"
+                body="Full contact, address and custom fields — a complete client record without the phone-tag."
+              />
+            </ul>
+          </div>
+        </div>
       </section>
 
       {/* Pricing --------------------------------------------------------- */}
@@ -210,6 +256,28 @@ function Feature({
       <h3 className="mt-4 font-semibold">{title}</h3>
       <p className="mt-1 text-sm text-slate-600">{body}</p>
     </div>
+  );
+}
+
+function AskItem({
+  icon,
+  q,
+  body,
+}: {
+  icon: React.ReactNode;
+  q: string;
+  body: string;
+}) {
+  return (
+    <li className="flex items-start gap-3 bg-white border border-rose-100 rounded-2xl p-4">
+      <div className="w-9 h-9 shrink-0 rounded-xl bg-rose-50 text-brand-primary flex items-center justify-center">
+        {icon}
+      </div>
+      <div>
+        <p className="font-semibold text-sm">{q}</p>
+        <p className="mt-0.5 text-sm text-slate-600">{body}</p>
+      </div>
+    </li>
   );
 }
 

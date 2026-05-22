@@ -39,12 +39,20 @@ export function MarketingFooter() {
           <span>·</span>
           <span>© {new Date().getFullYear()}</span>
         </div>
-        <a
-          href={`mailto:${BRAND.supportEmail}`}
-          className="hover:text-brand-primary transition"
-        >
-          {BRAND.supportEmail}
-        </a>
+        <div className="flex items-center gap-5">
+          <Link href="/privacy" className="hover:text-brand-primary transition">
+            Privacy
+          </Link>
+          <Link href="/terms" className="hover:text-brand-primary transition">
+            Terms
+          </Link>
+          <a
+            href={`mailto:${BRAND.supportEmail}`}
+            className="hover:text-brand-primary transition"
+          >
+            {BRAND.supportEmail}
+          </a>
+        </div>
       </div>
     </footer>
   );

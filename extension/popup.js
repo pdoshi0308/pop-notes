@@ -130,7 +130,7 @@
   $('forgot-link').addEventListener('click', (e) => {
     e.preventDefault();
     chrome.tabs.create({
-      url: (POPFORM_CONFIG.API_BASE || '') + '/dashboard/login',
+      url: (POPFORM_CONFIG.API_BASE || '') + '/dashboard/forgot',
     });
   });
 

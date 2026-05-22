@@ -195,7 +195,15 @@ export default function SignupClient() {
             </Link>
           </p>
           <p className="text-[11px] text-center text-slate-400 mt-2">
-            By signing up you agree to {BRAND.name}&apos;s terms.
+            By signing up you agree to our{' '}
+            <Link href="/terms" className="underline hover:text-brand-primary">
+              Terms
+            </Link>{' '}
+            and{' '}
+            <Link href="/privacy" className="underline hover:text-brand-primary">
+              Privacy Policy
+            </Link>
+            .
           </p>
         </div>
       </section>
