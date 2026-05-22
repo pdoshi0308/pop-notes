@@ -183,15 +183,16 @@
 
   const SETTINGS_FIELDS = {
     name: 'ws-name',
-    twilio_account_sid: 'ws-tw-sid',
-    twilio_auth_token: 'ws-tw-token',
-    twilio_from_number: 'ws-tw-from',
-    pusher_app_id: 'ws-ps-app',
-    pusher_key: 'ws-ps-key',
-    pusher_secret: 'ws-ps-secret',
-    pusher_cluster: 'ws-ps-cluster',
     sms_template: 'ws-sms',
   };
+
+  // Open the full web dashboard (form builder, team, billing) in a new tab.
+  $('open-dashboard').addEventListener('click', (e) => {
+    e.preventDefault();
+    chrome.tabs.create({
+      url: (POPFORM_CONFIG.API_BASE || '') + '/dashboard',
+    });
+  });
 
   async function openSettings() {
     showScreen('settings');

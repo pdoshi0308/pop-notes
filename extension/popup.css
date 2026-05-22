@@ -302,6 +302,17 @@ fieldset[disabled] .btn-primary {
 .btn-primary.loading .btn-label { opacity: 0; }
 .btn-primary.loading .spinner { opacity: 1; }
 
+.dashboard-link {
+  display: block;
+  text-align: center;
+  margin-top: 18px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary);
+  text-decoration: none;
+}
+.dashboard-link:hover { text-decoration: underline; }
+
 .btn-secondary {
   display: inline-flex;
   align-items: center;

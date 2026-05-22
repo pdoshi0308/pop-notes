@@ -123,32 +123,11 @@
         <p id="settings-loading" class="muted-line">Loading…</p>
 
         <fieldset id="settings-fields" disabled hidden>
-          <h3 class="section-h">Business</h3>
-          <label class="label" for="ws-name">Business name</label>
+          <h3 class="section-h">Business name</h3>
           <input class="input" id="ws-name" />
 
-          <h3 class="section-h">Twilio</h3>
-          <p class="muted-line">Where client SMS messages are sent from.</p>
-          <label class="label" for="ws-tw-sid">Account SID</label>
-          <input class="input" id="ws-tw-sid" autocomplete="off" spellcheck="false" />
-          <label class="label" for="ws-tw-token">Auth Token</label>
-          <input class="input" id="ws-tw-token" type="password" autocomplete="off" />
-          <label class="label" for="ws-tw-from">From Number (e.g. +447…)</label>
-          <input class="input" id="ws-tw-from" placeholder="+44…" />
-
-          <h3 class="section-h">Pusher</h3>
-          <p class="muted-line">Realtime delivery for completed forms.</p>
-          <label class="label" for="ws-ps-app">App ID</label>
-          <input class="input" id="ws-ps-app" />
-          <label class="label" for="ws-ps-key">Key</label>
-          <input class="input" id="ws-ps-key" />
-          <label class="label" for="ws-ps-secret">Secret</label>
-          <input class="input" id="ws-ps-secret" type="password" autocomplete="off" />
-          <label class="label" for="ws-ps-cluster">Cluster</label>
-          <input class="input" id="ws-ps-cluster" placeholder="eu" />
-
-          <h3 class="section-h">SMS template</h3>
-          <p class="muted-line">Use <code>{practice_name}</code> and <code>{link}</code>.</p>
+          <h3 class="section-h">Message clients receive</h3>
+          <p class="muted-line">Use <code>{business_name}</code> and <code>{link}</code>.</p>
           <textarea class="input" id="ws-sms" rows="4"></textarea>
 
           <p id="settings-error" class="error" hidden></p>
@@ -158,6 +137,8 @@
             <span class="spinner" aria-hidden="true"></span>
           </button>
           <span id="settings-saved" class="muted-line" hidden style="text-align:center;color:#22C55E;font-weight:600;margin-top:8px;display:block">Saved</span>
+
+          <a id="open-dashboard" class="dashboard-link" href="#">Manage forms, team &amp; billing →</a>
         </fieldset>
       </form>
     </section>

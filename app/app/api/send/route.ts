@@ -130,6 +130,7 @@ export async function POST(req: NextRequest) {
       ws.sms_template ||
       'Hi! {practice_name} has asked you to complete a quick registration form. It only takes 1 minute 👉 {link}';
     const body = template
+      .replaceAll('{business_name}', ws.name ?? 'Your business')
       .replaceAll('{practice_name}', ws.name ?? 'Your business')
       .replaceAll('{link}', link);
 
