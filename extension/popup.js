@@ -36,6 +36,12 @@
   });
   document.title = brandName;
 
+  // Reveal the WhatsApp send button only when enabled in config.
+  if (window.POPFORM_CONFIG && window.POPFORM_CONFIG.ENABLE_WHATSAPP) {
+    const wa = document.getElementById('wa-btn');
+    if (wa) wa.hidden = false;
+  }
+
   init().catch(showFatalError);
 
   async function init() {
