@@ -11,7 +11,7 @@ window.POPFORM_CONFIG = {
 
   SUPABASE_URL: 'https://usgdjgbuuhamlczospio.supabase.co',
   SUPABASE_ANON_KEY: 'sb_publishable_6Wjxls37PcIxHAE8PrMpJQ_29foBFek',
-  API_BASE: 'https://pop-notes.vercel.app',
+  API_BASE: 'https://pingform.io',
 
   // Flip to true once a Twilio WhatsApp sender is set up to reveal the
   // "Send via WhatsApp" button. Hidden until then.
