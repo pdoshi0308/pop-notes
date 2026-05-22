@@ -302,6 +302,37 @@ fieldset[disabled] .btn-primary {
 .btn-primary.loading .btn-label { opacity: 0; }
 .btn-primary.loading .spinner { opacity: 1; }
 
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 18px;
+  margin-top: 10px;
+  border-radius: 12px;
+  background: white;
+  color: var(--text);
+  font-weight: 600;
+  font-size: 14px;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease, transform 80ms ease;
+}
+.btn-secondary.full {
+  width: 100%;
+  padding: 14px 18px;
+  font-size: 15px;
+}
+.btn-secondary:hover:not(:disabled) {
+  background: #F8FAFC;
+  border-color: #CBD5E1;
+}
+.btn-secondary:active:not(:disabled) { transform: scale(0.985); }
+.btn-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .btn-ghost {
   display: inline-flex;
   align-items: center;

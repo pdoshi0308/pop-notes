@@ -246,6 +246,7 @@
   // ---------------------------------------------------------------------
   const phoneInput = $('phone');
   const sendBtn = $('send-btn');
+  const waBtn = $('wa-btn');
 
   phoneInput.addEventListener('input', () => {
     const pos = phoneInput.selectionStart;
@@ -258,7 +259,44 @@
       const next = Math.max(0, pos + delta);
       phoneInput.setSelectionRange(next, next);
     }
-    sendBtn.disabled = !PopformPhone.toE164(formatted);
+    const valid = !PopformPhone.toE164(formatted);
+    sendBtn.disabled = valid;
+    waBtn.disabled = valid;
+  });
+
+  // Build the registration link the patient/client opens. Mirrors the URL the
+  // server builds in /api/send so SMS and WhatsApp point at the same form.
+  function buildFormLink(e164) {
+    const base = (window.POPFORM_CONFIG && window.POPFORM_CONFIG.API_BASE) || '';
+    const ref = e164.replace(/^\+/, '');
+    return `${base}/register?workspace=${encodeURIComponent(
+      workspace?.id ?? ''
+    )}&ref=${encodeURIComponent(ref)}`;
+  }
+
+  // Send via WhatsApp: no SMS/Twilio. We still subscribe to the realtime
+  // channel so the completed form lands back in the panel, then open WhatsApp
+  // pre-filled to the recipient for reception to tap send.
+  $('wa-btn').addEventListener('click', () => {
+    const e164 = PopformPhone.toE164(phoneInput.value);
+    if (!e164) return;
+    const errEl = $('send-error');
+    errEl.hidden = true;
+    subscribeToPatient(e164);
+    pendingE164 = e164;
+    const link = buildFormLink(e164);
+    const msg = encodeURIComponent(
+      `Hi! ${workspace?.name ?? 'We'} ${
+        workspace?.name ? 'has' : 'have'
+      } asked you to complete a quick registration form. It only takes 1 minute 👉 ${link}`
+    );
+    chrome.tabs.create({ url: `https://wa.me/${e164.replace(/^\+/, '')}?text=${msg}` });
+    $('waiting-sub').textContent =
+      'Waiting for ' +
+      e164.replace(/^\+44/, '0').replace(/(\d{4})(\d{3})(\d{3})/, '$1 $2 $3') +
+      ' to fill it in…';
+    renderDevLink(link);
+    setState('waiting');
   });
 
   $('send-btn').addEventListener('click', async () => {
@@ -310,7 +348,7 @@
       `Hi! Please fill in this quick registration form: ${link}`
     );
     host.innerHTML = `
-      <div class="dev-link-title">SMS not sent — share the link manually</div>
+      <div class="dev-link-title">Share the form link</div>
       <div class="dev-link-actions">
         <button type="button" class="share-btn" data-action="copy">📋 Copy</button>
         <button type="button" class="share-btn" data-action="whatsapp">💬 WhatsApp</button>
@@ -351,6 +389,7 @@
   function resetMainScreen() {
     phoneInput.value = '';
     sendBtn.disabled = true;
+    waBtn.disabled = true;
     pendingE164 = null;
     lastFields = null;
     setState('input');
