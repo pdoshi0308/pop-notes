@@ -8,16 +8,12 @@ import { brandUrl } from '@/lib/brand';
 export const runtime = 'nodejs';
 
 /**
- * POST /api/send  { phone }
+ * POST /api/send  { phone, channel?: 'sms' | 'whatsapp' }
  * Headers: Authorization: Bearer <Supabase access_token>
  *
- * Flow:
- *   1. Validate JWT
- *   2. Look up workspace + plan
- *   3. Roll the usage counter if a new billing period has started
- *   4. Refuse if the workspace is over its SMS allowance
- *   5. Send via central Twilio (env vars) OR workspace Twilio (BYO override)
- *   6. Increment the counter
+ * Sends the registration link over SMS or WhatsApp via Twilio. When the
+ * requested channel isn't configured (no Twilio / no WhatsApp sender) it
+ * returns { manual: true, link } so the caller can share the link by hand.
  */
 export async function POST(req: NextRequest) {
   try {
@@ -26,8 +22,12 @@ export async function POST(req: NextRequest) {
       .trim();
     if (!token) return jsonError('Missing access token', 401);
 
-    const { phone } = (await req.json()) as { phone?: string };
+    const { phone, channel: rawChannel } = (await req.json()) as {
+      phone?: string;
+      channel?: string;
+    };
     if (!phone) return jsonError('Missing phone number', 400);
+    const channel: 'sms' | 'whatsapp' = rawChannel === 'whatsapp' ? 'whatsapp' : 'sms';
 
     const e164 = toE164(phone);
     if (!e164) return jsonError('Invalid UK mobile number', 400);
@@ -77,43 +77,53 @@ export async function POST(req: NextRequest) {
         .eq('id', ws.id);
     }
 
-    // ---------------------------------------------------------------------
-    // Enforce the plan limit.
-    // ---------------------------------------------------------------------
     const plan: PlanId = ((ws.plan as PlanId) || 'free') as PlanId;
     const limit = PLAN_BY_ID[plan].sms_limit;
-    if (smsUsed >= limit) {
-      return NextResponse.json(
-        {
-          ok: false,
-          error: `You've used all ${limit} SMS forms this month on the ${PLAN_BY_ID[plan].name} plan. Upgrade in Settings to send more.`,
-          over_limit: true,
-          plan,
-          limit,
-        },
-        { status: 402 }
-      );
-    }
 
     // ---------------------------------------------------------------------
     // Pick Twilio creds: workspace BYO if set, otherwise central env.
     // ---------------------------------------------------------------------
-    const sid =
-      ws.twilio_account_sid || process.env.TWILIO_ACCOUNT_SID || '';
-    const tok =
-      ws.twilio_auth_token || process.env.TWILIO_AUTH_TOKEN || '';
-    const from =
-      ws.twilio_from_number || process.env.TWILIO_FROM_NUMBER || '';
+    const sid = ws.twilio_account_sid || process.env.TWILIO_ACCOUNT_SID || '';
+    const tok = ws.twilio_auth_token || process.env.TWILIO_AUTH_TOKEN || '';
+    const from = ws.twilio_from_number || process.env.TWILIO_FROM_NUMBER || '';
+    // WhatsApp sender + optional approved template (central only).
+    const waFrom = (process.env.TWILIO_WHATSAPP_FROM || '').replace(/^whatsapp:/, '');
+    const waContentSid = process.env.TWILIO_WHATSAPP_CONTENT_SID || '';
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? brandUrl();
     const link = `${appUrl}/register?workspace=${ws.id}&ref=${encodeURIComponent(
       e164.replace(/^\+/, '')
     )}`;
 
-    if (!sid || !tok || !from) {
-      // No central Twilio + no BYO → dev mode (helpful during local testing).
-      console.log(`[/api/send] dev mode (no Twilio) — link for ${e164}: ${link}`);
-      return NextResponse.json({ ok: true, phone: e164, dev_mode: true, link });
+    // Can we actually send automatically on the requested channel?
+    const canSend =
+      channel === 'whatsapp' ? Boolean(sid && tok && waFrom) : Boolean(sid && tok && from);
+
+    if (!canSend) {
+      // Not configured → hand the link back so the caller shares it manually
+      // (WhatsApp click-to-send, or the dev-mode link during local testing).
+      return NextResponse.json({
+        ok: true,
+        phone: e164,
+        channel,
+        manual: true,
+        dev_mode: channel === 'sms',
+        link,
+      });
+    }
+
+    // Enforce the plan limit only for real (metered) sends.
+    if (smsUsed >= limit) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: `You've used all ${limit} forms this month on the ${PLAN_BY_ID[plan].name} plan. Upgrade in Settings to send more.`,
+          over_limit: true,
+          plan,
+          limit,
+        },
+        { status: 402 }
+      );
     }
 
     const template =
@@ -125,31 +135,52 @@ export async function POST(req: NextRequest) {
 
     const client = twilio(sid, tok);
     try {
-      await client.messages.create({ to: e164, from, body });
+      if (channel === 'whatsapp') {
+        const waTo = `whatsapp:${e164}`;
+        const waFromAddr = `whatsapp:${waFrom}`;
+        if (waContentSid) {
+          // Business-initiated chats need a Meta-approved template.
+          await client.messages.create({
+            from: waFromAddr,
+            to: waTo,
+            contentSid: waContentSid,
+            contentVariables: JSON.stringify({ '1': link }),
+          });
+        } else {
+          // Works inside the 24h session window / Twilio sandbox.
+          await client.messages.create({ from: waFromAddr, to: waTo, body });
+        }
+      } else {
+        await client.messages.create({ to: e164, from, body });
+      }
     } catch (twErr) {
       const code = (twErr as { code?: number })?.code;
       const raw = (twErr as { message?: string })?.message ?? 'request rejected';
-      console.error('[/api/send] Twilio error', code, raw);
+      console.error(`[/api/send] Twilio ${channel} error`, code, raw);
       const hint =
         code === 20003
-          ? 'Twilio rejected the credentials (auth failed). Check the Account SID (must start with "AC") and Auth Token in Settings.'
+          ? 'Twilio rejected the credentials (auth failed). Check the Account SID (must start with "AC") and Auth Token.'
+          : code === 63007
+          ? 'No WhatsApp sender is set up for that Twilio number — check TWILIO_WHATSAPP_FROM.'
+          : code === 63016
+          ? 'WhatsApp needs a Meta-approved template to start a chat. Set TWILIO_WHATSAPP_CONTENT_SID to your approved template SID.'
           : code === 21608
-          ? 'This number is unverified. Twilio trial accounts can only text numbers you have verified in the Twilio console.'
+          ? 'This number is unverified. Twilio trial accounts can only message numbers you have verified.'
           : code === 21606 || code === 21659 || code === 21210
-          ? 'Your Twilio "from" number cannot send SMS to this destination. Use an SMS-capable number on your account.'
+          ? 'Your Twilio "from" number cannot message this destination. Use a capable sender on your account.'
           : code === 21211 || code === 21614
-          ? 'That is not a valid SMS-capable phone number.'
-          : `SMS provider error (${code ?? 'unknown'}): ${raw}`;
+          ? 'That is not a valid phone number.'
+          : `Message provider error (${code ?? 'unknown'}): ${raw}`;
       return NextResponse.json({ ok: false, error: hint, provider_code: code }, { status: 502 });
     }
 
-    // Increment the usage counter. Best-effort — if it fails, the SMS still went.
+    // Increment usage. Best-effort — if it fails, the message still went.
     await admin
       .from('workspaces')
       .update({ sms_used_this_period: smsUsed + 1 })
       .eq('id', ws.id);
 
-    return NextResponse.json({ ok: true, phone: e164, used: smsUsed + 1, limit });
+    return NextResponse.json({ ok: true, phone: e164, channel, used: smsUsed + 1, limit });
   } catch (err) {
     console.error('[/api/send]', err);
     return jsonError('Could not send SMS. Please try again.', 500);

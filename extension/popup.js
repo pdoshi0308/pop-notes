@@ -277,26 +277,46 @@
   // Send via WhatsApp: no SMS/Twilio. We still subscribe to the realtime
   // channel so the completed form lands back in the panel, then open WhatsApp
   // pre-filled to the recipient for reception to tap send.
-  $('wa-btn').addEventListener('click', () => {
+  $('wa-btn').addEventListener('click', async () => {
     const e164 = PopformPhone.toE164(phoneInput.value);
     if (!e164) return;
     const errEl = $('send-error');
     errEl.hidden = true;
+    waBtn.disabled = true;
+    // Subscribe before sending so we don't race the client's submission.
     subscribeToPatient(e164);
     pendingE164 = e164;
-    const link = buildFormLink(e164);
-    const msg = encodeURIComponent(
-      `Hi! ${workspace?.name ?? 'We'} ${
-        workspace?.name ? 'has' : 'have'
-      } asked you to complete a quick registration form. It only takes 1 minute 👉 ${link}`
-    );
-    chrome.tabs.create({ url: `https://wa.me/${e164.replace(/^\+/, '')}?text=${msg}` });
-    $('waiting-sub').textContent =
-      'Waiting for ' +
-      e164.replace(/^\+44/, '0').replace(/(\d{4})(\d{3})(\d{3})/, '$1 $2 $3') +
-      ' to fill it in…';
-    renderDevLink(link);
-    setState('waiting');
+    try {
+      const result = await PopformAPI.withFreshToken(session, (tok) =>
+        PopformAPI.sendForm(tok, e164, 'whatsapp')
+      );
+      if (result && result.manual) {
+        // No WhatsApp sender configured server-side yet → open WhatsApp for a
+        // manual send (graceful fallback until the Twilio sender is approved).
+        const link = result.link || buildFormLink(e164);
+        const msg = encodeURIComponent(
+          `Hi! ${workspace?.name ?? 'We'} ${
+            workspace?.name ? 'has' : 'have'
+          } asked you to complete a quick registration form. It only takes 1 minute 👉 ${link}`
+        );
+        chrome.tabs.create({ url: `https://wa.me/${e164.replace(/^\+/, '')}?text=${msg}` });
+        renderDevLink(link);
+      } else {
+        // Sent automatically via Twilio WhatsApp — no manual step.
+        renderDevLink(null);
+      }
+      $('waiting-sub').textContent =
+        'Waiting for ' +
+        e164.replace(/^\+44/, '0').replace(/(\d{4})(\d{3})(\d{3})/, '$1 $2 $3') +
+        ' to fill it in…';
+      setState('waiting');
+    } catch (err) {
+      unsubscribeFromPatient();
+      errEl.textContent = friendlyError(err);
+      errEl.hidden = false;
+    } finally {
+      waBtn.disabled = false;
+    }
   });
 
   $('send-btn').addEventListener('click', async () => {

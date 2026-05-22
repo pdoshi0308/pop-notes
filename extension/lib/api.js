@@ -50,14 +50,14 @@
     });
   }
 
-  async function sendForm(accessToken, phone) {
+  async function sendForm(accessToken, phone, channel) {
     return jsonFetch(CFG.API_BASE + '/api/send', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: 'Bearer ' + accessToken,
       },
-      body: JSON.stringify({ phone }),
+      body: JSON.stringify({ phone, channel: channel || 'sms' }),
     });
   }
 
