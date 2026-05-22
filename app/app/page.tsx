@@ -7,6 +7,8 @@ import {
   Smartphone,
   TrendingUp,
   ClipboardList,
+  Sparkles,
+  SpellCheck,
 } from 'lucide-react';
 import { MarketingNav, MarketingFooter } from '@/components/marketing-nav';
 import { PricingTable } from '@/components/pricing-table';
@@ -125,26 +127,32 @@ export default function HomePage() {
                 Ask the questions your front desk won&apos;t.
               </h2>
               <p className="mt-4 text-slate-600">
-                Reception is rushed, and some questions feel awkward to ask out
-                loud — so they get skipped, and you lose the data. The form asks
-                every client, every time. No friction, nothing forgotten.
+                Reception is rushed: awkward questions get skipped, and names,
+                emails and addresses get misheard over the phone. When the client
+                fills it in themselves, nothing&apos;s missed and nothing&apos;s
+                spelt wrong — and you can ask anything you like.
               </p>
             </div>
             <ul className="space-y-3">
+              <AskItem
+                icon={<SpellCheck className="w-5 h-5" />}
+                q="Spelt right, every time"
+                body="Clients type their own name, email and address — no misheard spellings or wrong details taken down at the desk."
+              />
               <AskItem
                 icon={<TrendingUp className="w-5 h-5" />}
                 q="“How did you hear about us?”"
                 body="See which marketing actually brings clients in — captured on every signup instead of guessed."
               />
               <AskItem
-                icon={<ShieldCheck className="w-5 h-5" />}
-                q="Marketing &amp; contact consent"
-                body="Clean opt-ins you can act on, recorded with the submission for GDPR peace of mind."
+                icon={<Sparkles className="w-5 h-5" />}
+                q="Gender, consent, your own questions"
+                body="Ask anything you like. Toggle on extra fields — gender, marketing consent, custom questions — in seconds from your dashboard."
               />
               <AskItem
                 icon={<ClipboardList className="w-5 h-5" />}
                 q="The details you always end up chasing"
-                body="Full contact, address and custom fields — a complete client record without the phone-tag."
+                body="Full contact, address and custom fields — a complete, accurate client record without the phone-tag."
               />
             </ul>
           </div>
