@@ -27,9 +27,9 @@ export default async function DashboardHome() {
           body="Edit the message that gets sent to the client when your team clicks Send Form."
         />
         <Card
-          href="/dashboard/settings"
-          title="Connect Twilio + Pusher"
-          body="Add your SMS provider credentials and realtime keys so the extension can send and receive."
+          href="/dashboard/history"
+          title="View submission history"
+          body="Browse every completed registration form, with full details and timestamps."
         />
         <Card
           href="/dashboard/team"

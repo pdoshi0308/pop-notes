@@ -18,9 +18,7 @@ export default async function SettingsPage() {
 
   const { data: ws } = await supabase
     .from('workspaces')
-    .select(
-      'id, name, twilio_account_sid, twilio_auth_token, twilio_from_number, pusher_app_id, pusher_key, pusher_secret, pusher_cluster'
-    )
+    .select('id, name')
     .eq('id', profile.workspace_id)
     .maybeSingle();
 
