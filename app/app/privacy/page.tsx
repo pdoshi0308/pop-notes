@@ -23,8 +23,7 @@ export default function PrivacyPage() {
             controller and we act as their data processor.
           </p>
           <p>
-            Legal entity: [Company legal name]. Registered address: [Company
-            address]. ICO registration: [ICO number]. Contact:{' '}
+            Contact:{' '}
             <a href={`mailto:${BRAND.supportEmail}`}>{BRAND.supportEmail}</a>.
           </p>
         </Section>

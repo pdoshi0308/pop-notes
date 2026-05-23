@@ -91,7 +91,7 @@ export default function TermsPage() {
             <a href={`mailto:${BRAND.supportEmail}`} className="text-brand-primary font-medium">
               {BRAND.supportEmail}
             </a>
-            . Governing law: [England &amp; Wales / your jurisdiction].
+            . Governing law: England &amp; Wales.
           </p>
         </Section>
       </article>
