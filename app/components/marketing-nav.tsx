@@ -17,6 +17,16 @@ export function MarketingNav() {
           ))}
         </nav>
         <div className="flex items-center gap-2">
+          {BRAND.chromeStoreUrl && (
+            <a
+              href={BRAND.chromeStoreUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-ghost hidden md:inline-flex"
+            >
+              Add to Chrome
+            </a>
+          )}
           <Link href="/dashboard/login" className="btn-ghost hidden sm:inline-flex">
             Sign in
           </Link>

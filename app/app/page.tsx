@@ -39,9 +39,20 @@ export default function HomePage() {
           <Link href="/signup" className="btn-primary !py-3 !px-5 text-base">
             Start free — 10 SMS/mo <ArrowRight className="w-4 h-4" />
           </Link>
-          <a href="#how-it-works" className="btn-secondary !py-3 !px-5 text-base">
-            See how it works
-          </a>
+          {BRAND.chromeStoreUrl ? (
+            <a
+              href={BRAND.chromeStoreUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-secondary !py-3 !px-5 text-base"
+            >
+              Add to Chrome
+            </a>
+          ) : (
+            <a href="#how-it-works" className="btn-secondary !py-3 !px-5 text-base">
+              See how it works
+            </a>
+          )}
         </div>
         <p className="mt-4 text-xs text-slate-400">
           No credit card. Cancel any time.
@@ -91,25 +102,31 @@ export default function HomePage() {
             {
               n: 1,
               t: 'Your team types the number',
-              b: 'In the Chrome side panel, type the client’s mobile and hit Send Form.',
+              b: 'In the Chrome side panel, type the client’s mobile and hit Send.',
+              illustration: <StepOneArt />,
             },
             {
               n: 2,
               t: 'Client gets a text',
               b: 'They tap the link and fill in a mobile-optimised form on their phone.',
+              illustration: <StepTwoArt />,
             },
             {
               n: 3,
               t: 'Data lands in Chrome',
-              b: 'A client card pops in with copy buttons. Paste straight into your system.',
+              b: 'A client card pops in with copy buttons — paste straight into your system.',
+              illustration: <StepThreeArt />,
             },
           ].map((step) => (
             <li key={step.n} className="card p-5">
-              <div className="w-9 h-9 rounded-full bg-rose-50 text-brand-primary flex items-center justify-center font-bold">
-                {step.n}
+              {step.illustration}
+              <div className="mt-4 flex items-center gap-2.5">
+                <div className="w-7 h-7 rounded-full bg-rose-50 text-brand-primary flex items-center justify-center font-bold text-sm shrink-0">
+                  {step.n}
+                </div>
+                <h3 className="font-semibold text-lg">{step.t}</h3>
               </div>
-              <h3 className="mt-4 font-semibold text-lg">{step.t}</h3>
-              <p className="mt-1 text-sm text-slate-600">{step.b}</p>
+              <p className="mt-2 text-sm text-slate-600">{step.b}</p>
             </li>
           ))}
         </ol>
@@ -286,6 +303,92 @@ function AskItem({
         <p className="mt-0.5 text-sm text-slate-600">{body}</p>
       </div>
     </li>
+  );
+}
+
+// --- "How it works" step illustrations -----------------------------------
+// Inline SVG so they scale crisply and stay on-brand with the rose-red theme.
+
+function StepOneArt() {
+  return (
+    <svg
+      viewBox="0 0 280 180"
+      className="w-full h-44 rounded-xl bg-rose-50/60"
+      role="img"
+      aria-label="Chrome side panel with phone input"
+    >
+      <rect x="80" y="20" width="120" height="140" rx="10" fill="white" stroke="#E2E8F0" />
+      <rect x="92" y="32" width="14" height="14" rx="4" fill="#E11D48" />
+      <rect x="112" y="36" width="44" height="6" rx="3" fill="#0F172A" />
+      <rect x="92" y="60" width="38" height="5" rx="2.5" fill="#94A3B8" />
+      <rect x="92" y="72" width="96" height="22" rx="6" fill="white" stroke="#CBD5E1" />
+      <text x="100" y="87" fontSize="10" fill="#0F172A" fontFamily="ui-monospace, monospace">
+        07700 900 123
+      </text>
+      <rect x="92" y="104" width="96" height="22" rx="6" fill="#E11D48" />
+      <text x="116" y="119" fontSize="9" fill="white" fontWeight="600">
+        Send by SMS
+      </text>
+      <rect x="92" y="132" width="96" height="20" rx="6" fill="white" stroke="#CBD5E1" />
+      <text x="113" y="146" fontSize="9" fill="#0F172A" fontWeight="500">
+        Send via WhatsApp
+      </text>
+    </svg>
+  );
+}
+
+function StepTwoArt() {
+  return (
+    <svg
+      viewBox="0 0 280 180"
+      className="w-full h-44 rounded-xl bg-rose-50/60"
+      role="img"
+      aria-label="Client phone showing an SMS with the form link"
+    >
+      <rect x="100" y="12" width="80" height="156" rx="14" fill="white" stroke="#CBD5E1" strokeWidth="1.5" />
+      <rect x="124" y="18" width="32" height="3" rx="1.5" fill="#CBD5E1" />
+      <rect x="112" y="34" width="22" height="3" rx="1.5" fill="#94A3B8" />
+      <rect x="156" y="34" width="14" height="3" rx="1.5" fill="#94A3B8" />
+      <rect x="112" y="50" width="56" height="42" rx="10" fill="#F1F5F9" />
+      <rect x="118" y="58" width="44" height="3" rx="1.5" fill="#64748B" />
+      <rect x="118" y="65" width="36" height="3" rx="1.5" fill="#64748B" />
+      <rect x="118" y="72" width="40" height="3" rx="1.5" fill="#64748B" />
+      <rect x="118" y="82" width="44" height="3" rx="1.5" fill="#E11D48" />
+      <rect x="116" y="116" width="48" height="22" rx="11" fill="#E11D48" />
+      <text x="128" y="131" fontSize="9" fill="white" fontWeight="600">
+        Open form
+      </text>
+    </svg>
+  );
+}
+
+function StepThreeArt() {
+  return (
+    <svg
+      viewBox="0 0 280 180"
+      className="w-full h-44 rounded-xl bg-rose-50/60"
+      role="img"
+      aria-label="Side panel showing the completed client card"
+    >
+      <rect x="80" y="20" width="120" height="140" rx="10" fill="white" stroke="#E2E8F0" />
+      <circle cx="94" cy="38" r="7" fill="#DCFCE7" />
+      <path d="M91 38 L93.5 40.5 L98 36" stroke="#16A34A" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+      <rect x="106" y="35" width="48" height="6" rx="3" fill="#0F172A" />
+      <rect x="160" y="32" width="32" height="14" rx="7" fill="#E11D48" />
+      <text x="166" y="42" fontSize="7" fill="white" fontWeight="600">
+        Copy all
+      </text>
+      <rect x="92" y="58" width="32" height="4" rx="2" fill="#94A3B8" />
+      <rect x="92" y="66" width="80" height="4" rx="2" fill="#0F172A" />
+      <rect x="92" y="80" width="28" height="4" rx="2" fill="#94A3B8" />
+      <rect x="92" y="88" width="70" height="4" rx="2" fill="#0F172A" />
+      <rect x="92" y="102" width="34" height="4" rx="2" fill="#94A3B8" />
+      <rect x="92" y="110" width="64" height="4" rx="2" fill="#0F172A" />
+      <rect x="92" y="124" width="26" height="4" rx="2" fill="#94A3B8" />
+      <rect x="92" y="132" width="58" height="4" rx="2" fill="#0F172A" />
+      <rect x="92" y="146" width="40" height="4" rx="2" fill="#94A3B8" />
+      <rect x="92" y="154" width="76" height="4" rx="2" fill="#0F172A" />
+    </svg>
   );
 }
 

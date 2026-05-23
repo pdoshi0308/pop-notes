@@ -22,6 +22,13 @@ export const BRAND = {
   /** Support email shown in the dashboard + landing footer. */
   supportEmail: 'support@pingform.io',
 
+  /**
+   * Chrome Web Store URL for the extension. Empty until the extension is
+   * published; the "Add to Chrome" CTA on marketing pages auto-hides when
+   * this is blank. Paste the store URL once Google approves the listing.
+   */
+  chromeStoreUrl: '',
+
   /** Marketing nav links. Each entry is { label, href }. */
   nav: [
     { label: 'Features', href: '#features' },
