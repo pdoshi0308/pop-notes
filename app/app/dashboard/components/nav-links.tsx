@@ -9,12 +9,14 @@ import {
   Settings,
   ClipboardList,
   CreditCard,
+  History,
 } from 'lucide-react';
 
 const ITEMS = [
   { href: '/dashboard', label: 'Overview', icon: LayoutGrid },
   { href: '/dashboard/form', label: 'Form Builder', icon: ClipboardList },
   { href: '/dashboard/sms', label: 'SMS Editor', icon: MessageSquareText },
+  { href: '/dashboard/history', label: 'History', icon: History },
   { href: '/dashboard/team', label: 'Team', icon: Users },
   { href: '/dashboard/billing', label: 'Billing', icon: CreditCard },
   { href: '/dashboard/settings', label: 'Settings', icon: Settings },

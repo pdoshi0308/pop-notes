@@ -53,6 +53,18 @@ export async function POST(req: NextRequest) {
 
     await pusher.trigger(channelForPhone(e164), 'patient.registered', payload);
 
+    // Persist for submission history. Best-effort — a storage hiccup must not
+    // fail the patient's submission (they've already filled it in).
+    try {
+      await admin.from('submissions').insert({
+        workspace_id: ws.id,
+        phone: e164,
+        fields: body.fields,
+      });
+    } catch (storeErr) {
+      console.error('[/api/submit] history insert failed', storeErr);
+    }
+
     return NextResponse.json({ ok: true, practice_name: ws.name });
   } catch (err) {
     console.error('[/api/submit]', err);

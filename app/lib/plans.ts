@@ -35,9 +35,9 @@ export const PLANS: Plan[] = [
     tagline: 'Try it on a few clients',
     features: [
       '10 SMS forms / month',
-      'Real-time submissions',
+      'Real-time submissions in Chrome',
+      'Customisable form fields',
       'Unlimited team members',
-      'Chrome extension included',
     ],
   },
   {
@@ -49,8 +49,8 @@ export const PLANS: Plan[] = [
     tagline: 'For small businesses',
     features: [
       '150 SMS forms / month',
-      'Real-time submissions',
-      'Customisable form fields',
+      'Everything in Free',
+      'Saved submission history',
       'Email support',
     ],
   },
@@ -65,7 +65,6 @@ export const PLANS: Plan[] = [
       '500 SMS forms / month',
       'Everything in Starter',
       'Priority email support',
-      'Custom branded form',
     ],
     recommended: true,
   },
