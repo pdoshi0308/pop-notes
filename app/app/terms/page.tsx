@@ -14,8 +14,6 @@ export default function TermsPage() {
         <h1 className="text-3xl font-extrabold tracking-tight">Terms of Service</h1>
         <p className="text-sm text-slate-500 mt-1">Last updated: {LAST_UPDATED}</p>
 
-        <Note />
-
         <Section title="1. Agreement">
           <p>
             These terms govern your use of {BRAND.name}. By creating an account
@@ -102,17 +100,7 @@ export default function TermsPage() {
   );
 }
 
-const LAST_UPDATED = '22 May 2026';
-
-function Note() {
-  return (
-    <div className="my-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-      <strong>Template — needs legal review.</strong> This is a starting point.
-      Replace the bracketed placeholders and have a solicitor review it before
-      relying on it.
-    </div>
-  );
-}
+const LAST_UPDATED = '23 May 2026';
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (

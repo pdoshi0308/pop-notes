@@ -14,8 +14,6 @@ export default function PrivacyPage() {
         <h1 className="text-3xl font-extrabold tracking-tight">Privacy Policy</h1>
         <p className="text-sm text-slate-500 mt-1">Last updated: {LAST_UPDATED}</p>
 
-        <Note />
-
         <Section title="Who we are">
           <p>
             {BRAND.name} (&quot;we&quot;, &quot;us&quot;) provides software that
@@ -91,18 +89,7 @@ export default function PrivacyPage() {
   );
 }
 
-const LAST_UPDATED = '22 May 2026';
-
-function Note() {
-  return (
-    <div className="my-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-      <strong>Template — needs legal review.</strong> This is a starting point.
-      Replace the bracketed placeholders and have it reviewed by a solicitor
-      before relying on it, especially if you collect health or other
-      special-category data.
-    </div>
-  );
-}
+const LAST_UPDATED = '23 May 2026';
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
