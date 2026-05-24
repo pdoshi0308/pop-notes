@@ -20,7 +20,7 @@ export default async function BillingPage() {
   const { data: ws } = await supabase
     .from('workspaces')
     .select(
-      'name, plan, sms_used_this_period, period_start, stripe_subscription_id'
+      'name, plan, sms_used_this_period, period_start, stripe_subscription_id, stripe_customer_id, cancel_at_period_end, current_period_end'
     )
     .eq('id', profile.workspace_id)
     .maybeSingle();
@@ -34,6 +34,9 @@ export default async function BillingPage() {
       smsUsed={ws.sms_used_this_period ?? 0}
       smsLimit={PLAN_BY_ID[plan].sms_limit}
       hasActiveSubscription={!!ws.stripe_subscription_id}
+      hasCustomer={!!ws.stripe_customer_id}
+      cancelAtPeriodEnd={!!ws.cancel_at_period_end}
+      currentPeriodEnd={ws.current_period_end}
     />
   );
 }

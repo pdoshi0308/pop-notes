@@ -58,13 +58,17 @@ export async function POST(req: NextRequest) {
         const workspaceId = sub.metadata?.workspace_id as string | undefined;
         const priceId = sub.items.data[0]?.price.id;
         const plan = PLANS.find((p) => p.stripePriceId === priceId)?.id;
-        if (workspaceId && plan) {
+        if (workspaceId) {
           await admin
             .from('workspaces')
             .update({
-              plan,
+              ...(plan ? { plan } : {}),
               stripe_customer_id: sub.customer as string,
               stripe_subscription_id: sub.id,
+              cancel_at_period_end: sub.cancel_at_period_end ?? false,
+              current_period_end: sub.current_period_end
+                ? new Date(sub.current_period_end * 1000).toISOString()
+                : null,
             })
             .eq('id', workspaceId);
         }
@@ -77,7 +81,12 @@ export async function POST(req: NextRequest) {
         if (workspaceId) {
           await admin
             .from('workspaces')
-            .update({ plan: 'free', stripe_subscription_id: null })
+            .update({
+              plan: 'free',
+              stripe_subscription_id: null,
+              cancel_at_period_end: false,
+              current_period_end: null,
+            })
             .eq('id', workspaceId);
         }
         break;
