@@ -27,7 +27,8 @@ export const BRAND = {
    * published; the "Add to Chrome" CTA on marketing pages auto-hides when
    * this is blank. Paste the store URL once Google approves the listing.
    */
-  chromeStoreUrl: '',
+  chromeStoreUrl:
+    'https://chromewebstore.google.com/detail/pingform/jgiodpjlcffaijflliilcdpigpjbpfjl',
 
   /** Marketing nav links. Each entry is { label, href }. */
   nav: [

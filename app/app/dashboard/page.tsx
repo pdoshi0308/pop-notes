@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { createSupabaseServerClient } from '@/lib/supabase-server';
 import { redirect } from 'next/navigation';
 import { ArrowRight } from 'lucide-react';
+import { BRAND } from '@/lib/brand';
+import { SetupChecklist } from './components/setup-checklist';
 
 export default async function DashboardHome() {
   const supabase = await createSupabaseServerClient();
@@ -10,12 +12,26 @@ export default async function DashboardHome() {
   } = await supabase.auth.getUser();
   if (!user) redirect('/dashboard/login');
 
+  const { count } = await supabase
+    .from('submissions')
+    .select('id', { count: 'exact', head: true });
+  const submissionCount = count ?? 0;
+
   return (
     <div className="px-8 py-10 max-w-4xl">
       <h1 className="text-3xl font-bold tracking-tight">Welcome back</h1>
       <p className="text-slate-600 mt-1">Quick links to get your business set up.</p>
 
-      <div className="grid sm:grid-cols-2 gap-4 mt-8">
+      {BRAND.chromeStoreUrl && (
+        <div className="mt-8">
+          <SetupChecklist
+            chromeStoreUrl={BRAND.chromeStoreUrl}
+            submissionCount={submissionCount}
+          />
+        </div>
+      )}
+
+      <div className="grid sm:grid-cols-2 gap-4 mt-6">
         <Card
           href="/dashboard/form"
           title="Customise your form"
