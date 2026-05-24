@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Loader2, AlertTriangle } from 'lucide-react';
 import { createSupabaseBrowserClient } from '@/lib/supabase-browser';
 
@@ -10,11 +11,13 @@ export default function AccountForm({
   fullName: initialName,
   role,
   workspaceName,
+  hasPassword,
 }: {
   email: string;
   fullName: string;
   role: string;
   workspaceName: string;
+  hasPassword: boolean;
 }) {
   const router = useRouter();
   const [name, setName] = useState(initialName);
@@ -86,16 +89,20 @@ export default function AccountForm({
     setPwBusy(true);
     setPwNote(null);
     const supabase = createSupabaseBrowserClient();
-    // Re-authenticate first so we don't let a stolen-session attacker change
-    // the password without proving they know the current one.
-    const { error: signInErr } = await supabase.auth.signInWithPassword({
-      email: initialEmail,
-      password: currentPw,
-    });
-    if (signInErr) {
-      setPwBusy(false);
-      setPwNote({ kind: 'err', text: 'Current password is incorrect' });
-      return;
+    // If the user already has a password identity, re-auth with the current
+    // one first — that way a stolen session token alone can't change the
+    // password. OAuth-only users skip the re-auth (there's no current
+    // password to check against) and simply set one for the first time.
+    if (hasPassword) {
+      const { error: signInErr } = await supabase.auth.signInWithPassword({
+        email: initialEmail,
+        password: currentPw,
+      });
+      if (signInErr) {
+        setPwBusy(false);
+        setPwNote({ kind: 'err', text: 'Current password is incorrect' });
+        return;
+      }
     }
     const { error } = await supabase.auth.updateUser({ password: newPw });
     setPwBusy(false);
@@ -103,9 +110,15 @@ export default function AccountForm({
       setPwNote({ kind: 'err', text: error.message });
       return;
     }
-    setPwNote({ kind: 'ok', text: 'Password updated.' });
+    setPwNote({
+      kind: 'ok',
+      text: hasPassword
+        ? 'Password updated.'
+        : 'Password set. You can now sign in with email + password — including from the Chrome extension.',
+    });
     setCurrentPw('');
     setNewPw('');
+    router.refresh();
   }
 
   async function leaveWorkspace() {
@@ -264,23 +277,37 @@ export default function AccountForm({
       <section className="mt-10">
         <h2 className="text-base font-semibold">Password</h2>
         <p className="text-sm text-slate-500 mt-0.5">
-          Use a strong, unique password. We re-check your current password before changing it.
+          {hasPassword
+            ? 'Use a strong, unique password. We re-check your current password before changing it.'
+            : 'You signed in with Google, so no password is set. Add one so you can sign in with email + password (required by the Chrome extension).'}
         </p>
         <div className="card p-5 mt-3">
           <form onSubmit={changePassword} className="space-y-3">
+            {hasPassword && (
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="label !mb-0">Current password</label>
+                  <Link
+                    href="/dashboard/forgot"
+                    className="text-xs text-brand-primary font-medium"
+                  >
+                    Forgot?
+                  </Link>
+                </div>
+                <input
+                  type="password"
+                  className="input"
+                  value={currentPw}
+                  onChange={(e) => setCurrentPw(e.target.value)}
+                  autoComplete="current-password"
+                  required
+                />
+              </div>
+            )}
             <div>
-              <label className="label">Current password</label>
-              <input
-                type="password"
-                className="input"
-                value={currentPw}
-                onChange={(e) => setCurrentPw(e.target.value)}
-                autoComplete="current-password"
-                required
-              />
-            </div>
-            <div>
-              <label className="label">New password</label>
+              <label className="label">
+                {hasPassword ? 'New password' : 'Choose a password'}
+              </label>
               <input
                 type="password"
                 className="input"
@@ -303,8 +330,17 @@ export default function AccountForm({
                 {pwNote.text}
               </p>
             )}
-            <button className="btn-primary" disabled={pwBusy || !currentPw || !newPw}>
-              {pwBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Change password'}
+            <button
+              className="btn-primary"
+              disabled={pwBusy || (hasPassword && !currentPw) || !newPw}
+            >
+              {pwBusy ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : hasPassword ? (
+                'Change password'
+              ) : (
+                'Set password'
+              )}
             </button>
           </form>
         </div>

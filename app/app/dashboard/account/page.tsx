@@ -22,12 +22,19 @@ export default async function AccountPage() {
     .eq('id', profile.workspace_id)
     .maybeSingle();
 
+  // OAuth-only users (e.g. signed up via Google) have no email/password
+  // identity, so "change password" doesn't apply — we render a "set
+  // password" flow for them instead.
+  const hasPassword =
+    (user.identities ?? []).some((i) => i.provider === 'email') ?? false;
+
   return (
     <AccountForm
       email={user.email ?? ''}
       fullName={profile.full_name ?? ''}
       role={profile.role}
       workspaceName={ws?.name ?? ''}
+      hasPassword={hasPassword}
     />
   );
 }
