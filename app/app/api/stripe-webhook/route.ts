@@ -33,6 +33,22 @@ export async function POST(req: NextRequest) {
 
   const admin = createSupabaseAdminClient();
 
+  // Idempotency — Stripe retries events on transient failures, and a
+  // late-arriving subscription.updated could revert state set by a fresh
+  // subscription.deleted. The insert short-circuits any retry.
+  const { error: dupeErr } = await admin
+    .from('stripe_events')
+    .insert({ id: event.id, type: event.type });
+  if (dupeErr) {
+    // Postgres unique_violation = already processed. Anything else is a
+    // genuine failure that should bubble so Stripe retries.
+    if ((dupeErr as { code?: string }).code === '23505') {
+      return NextResponse.json({ received: true, deduped: true });
+    }
+    console.error('[stripe-webhook] dedupe insert failed', dupeErr);
+    return NextResponse.json({ ok: false }, { status: 500 });
+  }
+
   try {
     switch (event.type) {
       case 'checkout.session.completed': {

@@ -12,9 +12,21 @@ export default async function DashboardHome() {
   } = await supabase.auth.getUser();
   if (!user) redirect('/dashboard/login');
 
-  const { count } = await supabase
-    .from('submissions')
-    .select('id', { count: 'exact', head: true });
+  const { data: profile } = await supabase
+    .from('users')
+    .select('workspace_id')
+    .eq('id', user.id)
+    .maybeSingle();
+  // Scope to this user's workspace explicitly. RLS already filters server-side,
+  // but a missing filter would force Postgres to count every row the policy
+  // allows — expensive at scale. `planned` is a quick estimator that's
+  // accurate enough for the "you've received N forms" badge.
+  const { count } = profile?.workspace_id
+    ? await supabase
+        .from('submissions')
+        .select('id', { count: 'planned', head: true })
+        .eq('workspace_id', profile.workspace_id)
+    : { count: 0 };
   const submissionCount = count ?? 0;
 
   return (

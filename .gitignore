@@ -23,3 +23,13 @@ Thumbs.db
 
 # Vercel
 .vercel
+
+# Build artifacts
+app/devserver.log
+app/tsconfig.tsbuildinfo
+
+# Stress-test scaffolding — screenshots may contain real data; node_modules and one-time SQL are local-only
+stress-test/screenshots/
+stress-test/node_modules/
+stress-test/APPLY-IN-SUPABASE.sql
+

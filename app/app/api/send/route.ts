@@ -49,33 +49,11 @@ export async function POST(req: NextRequest) {
     const { data: ws, error: wsErr } = await admin
       .from('workspaces')
       .select(
-        'id, name, plan, sms_used_this_period, period_start, twilio_account_sid, twilio_auth_token, twilio_from_number, sms_template'
+        'id, name, plan, twilio_account_sid, twilio_auth_token, twilio_from_number, sms_template'
       )
       .eq('id', profile.workspace_id)
       .maybeSingle();
     if (wsErr || !ws) return jsonError('Workspace not found', 404);
-
-    // ---------------------------------------------------------------------
-    // Roll the counter if we're in a new calendar month.
-    // ---------------------------------------------------------------------
-    const now = new Date();
-    const periodStart = ws.period_start ? new Date(ws.period_start) : new Date(0);
-    const sameMonth =
-      now.getUTCFullYear() === periodStart.getUTCFullYear() &&
-      now.getUTCMonth() === periodStart.getUTCMonth();
-    let smsUsed = ws.sms_used_this_period ?? 0;
-    if (!sameMonth) {
-      smsUsed = 0;
-      await admin
-        .from('workspaces')
-        .update({
-          sms_used_this_period: 0,
-          period_start: new Date(
-            Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)
-          ).toISOString(),
-        })
-        .eq('id', ws.id);
-    }
 
     const plan: PlanId = ((ws.plan as PlanId) || 'free') as PlanId;
     const limit = PLAN_BY_ID[plan].sms_limit;
@@ -112,8 +90,20 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Enforce the plan limit only for real (metered) sends.
-    if (smsUsed >= limit) {
+    // Atomically check the limit AND reserve a credit. The Postgres function
+    // takes a row lock on the workspace, so two concurrent /api/send calls
+    // serialise here instead of both reading the same `used` value and both
+    // passing the limit check (the bug we used to have).
+    const { data: reserveRow, error: reserveErr } = await admin.rpc(
+      'increment_sms_usage',
+      { p_workspace_id: ws.id, p_limit: limit }
+    );
+    if (reserveErr) {
+      console.error('[/api/send] reserve failed', reserveErr);
+      return jsonError('Could not reserve SMS credit', 500);
+    }
+    const reserve = Array.isArray(reserveRow) ? reserveRow[0] : reserveRow;
+    if (!reserve?.allowed) {
       return NextResponse.json(
         {
           ok: false,
@@ -125,6 +115,7 @@ export async function POST(req: NextRequest) {
         { status: 402 }
       );
     }
+    const smsUsed = (reserve.used as number) - 1; // value before increment, for parity with the old response shape
 
     const template =
       ws.sms_template ||
@@ -155,6 +146,17 @@ export async function POST(req: NextRequest) {
         await client.messages.create({ to: e164, from, body });
       }
     } catch (twErr) {
+      // Twilio said no after we already reserved a credit — refund it so the
+      // user's monthly counter doesn't get burned for a message that never
+      // went out.
+      try {
+        await admin
+          .from('workspaces')
+          .update({ sms_used_this_period: smsUsed })
+          .eq('id', ws.id);
+      } catch (refundErr) {
+        console.error('[/api/send] refund failed', refundErr);
+      }
       const code = (twErr as { code?: number })?.code;
       const raw = (twErr as { message?: string })?.message ?? 'request rejected';
       console.error(`[/api/send] Twilio ${channel} error`, code, raw);
@@ -175,13 +177,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: false, error: hint, provider_code: code }, { status: 502 });
     }
 
-    // Increment usage. Best-effort — if it fails, the message still went.
-    await admin
-      .from('workspaces')
-      .update({ sms_used_this_period: smsUsed + 1 })
-      .eq('id', ws.id);
-
-    return NextResponse.json({ ok: true, phone: e164, channel, used: smsUsed + 1, limit });
+    // Credit was already reserved atomically above — nothing else to write.
+    return NextResponse.json({ ok: true, phone: e164, channel, used: reserve.used, limit });
   } catch (err) {
     console.error('[/api/send]', err);
     return jsonError('Could not send SMS. Please try again.', 500);

@@ -75,14 +75,15 @@ export async function DELETE(req: NextRequest) {
     if (wsErr) return jsonError(wsErr.message, 400);
 
     // Now delete each auth user too — the cascade only handled the
-    // application-side rows.
-    for (const m of members ?? []) {
-      try {
-        await admin.auth.admin.deleteUser(m.id);
-      } catch (err) {
-        console.error('[workspace/delete user]', m.id, err);
-      }
-    }
+    // application-side rows. Run them in parallel: at 10 members this turns
+    // 10 sequential GoTrue round-trips into one.
+    await Promise.all(
+      (members ?? []).map((m) =>
+        admin.auth.admin.deleteUser(m.id).catch((err) => {
+          console.error('[workspace/delete user]', m.id, err);
+        })
+      )
+    );
 
     return NextResponse.json({ ok: true });
   } catch (err) {

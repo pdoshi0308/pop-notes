@@ -171,23 +171,22 @@ export async function DELETE(req: NextRequest) {
 }
 
 /**
- * Find an auth user by email by paginating listUsers (Supabase doesn't
- * expose a server-side filter). Returns null when not found.
+ * Find an auth user by email via a SECURITY DEFINER Postgres function that
+ * queries auth.users directly (O(1) on the email index). Replaces an older
+ * listUsers paginate-and-scan that was O(N) on auth.users count.
  */
 async function findAuthUserByEmail(
   admin: ReturnType<typeof createSupabaseAdminClient>,
   email: string
-) {
-  const target = email.toLowerCase();
-  const perPage = 1000;
-  for (let page = 1; page <= 50; page++) {
-    const { data, error } = await admin.auth.admin.listUsers({ page, perPage });
-    if (error || !data) return null;
-    const hit = data.users.find((u) => u.email?.toLowerCase() === target);
-    if (hit) return hit;
-    if (data.users.length < perPage) return null;
+): Promise<{ id: string } | null> {
+  const { data, error } = await admin.rpc('find_auth_user_id_by_email', {
+    p_email: email,
+  });
+  if (error) {
+    console.error('[/api/team/invite findAuthUserByEmail]', error);
+    return null;
   }
-  return null;
+  return data ? { id: data as string } : null;
 }
 
 async function authedAdmin(req: NextRequest) {
