@@ -1,14 +1,34 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { createSupabaseBrowserClient } from '@/lib/supabase-browser';
 import { BRAND } from '@/lib/brand';
 
+const ERROR_MESSAGES: Record<string, string> = {
+  no_workspace:
+    'You\'re not part of a workspace yet. Ask an admin to invite you, or create a new workspace.',
+  invite_expired:
+    'That invitation link has expired or been revoked. Ask the admin to send a new one.',
+  accept_invite_needs_session:
+    'The invitation link couldn\'t sign you in. Open the original email and click the link again.',
+};
+
 export default function DashboardLogin() {
+  return (
+    <Suspense fallback={null}>
+      <DashboardLoginInner />
+    </Suspense>
+  );
+}
+
+function DashboardLoginInner() {
   const router = useRouter();
+  const search = useSearchParams();
+  const reasonKey = search.get('error');
+  const reason = reasonKey ? ERROR_MESSAGES[reasonKey] : null;
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -57,6 +77,12 @@ export default function DashboardLogin() {
         <p className="text-sm text-slate-500 text-center mt-1 mb-6">
           Admin dashboard
         </p>
+
+        {reason && (
+          <p className="text-sm rounded-lg px-3 py-2 mb-4 border text-amber-800 bg-amber-50 border-amber-100">
+            {reason}
+          </p>
+        )}
 
         <button
           type="button"
@@ -120,7 +146,7 @@ export default function DashboardLogin() {
           </Link>
         </p>
         <p className="text-[11px] text-center text-slate-400 mt-2">
-          Team members sign in through the Chrome extension.
+          Team members can sign in here too — invites arrive by email.
         </p>
       </div>
     </main>

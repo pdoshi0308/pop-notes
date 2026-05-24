@@ -33,7 +33,7 @@ export default function TeamPanel({
 }) {
   void workspaceId;
   const [inviteEmail, setInviteEmail] = useState('');
-  const [inviteRole, setInviteRole] = useState<'admin' | 'receptionist'>('receptionist');
+  const [inviteRole, setInviteRole] = useState<'admin' | 'member'>('member');
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null);
   const [pendingRow, setPendingRow] = useState<string | null>(null);
@@ -116,7 +116,7 @@ export default function TeamPanel({
     location.reload();
   }
 
-  async function changeRole(member: Member, role: 'admin' | 'receptionist') {
+  async function changeRole(member: Member, role: 'admin' | 'member') {
     if (member.role === role) return;
     setPendingRow(member.id);
     const token = await getToken();
@@ -194,16 +194,26 @@ export default function TeamPanel({
   }
 
   async function remove(member: Member) {
-    if (!confirm(`Remove ${member.full_name} from the workspace?`)) return;
+    if (
+      !confirm(
+        `Remove ${member.full_name} from the workspace? They will be signed out and lose access immediately.`
+      )
+    )
+      return;
     setPendingRow(member.id);
-    const supabase = createSupabaseBrowserClient();
-    const { error } = await supabase
-      .from('users')
-      .update({ workspace_id: null })
-      .eq('id', member.id);
+    const token = await getToken();
+    const res = await fetch('/api/team/remove', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ user_id: member.id }),
+    });
+    const data = await res.json().catch(() => ({}));
     setPendingRow(null);
-    if (error) {
-      setNote({ kind: 'err', text: error.message });
+    if (!res.ok || !data.ok) {
+      setNote({ kind: 'err', text: data.error ?? 'Could not remove' });
       return;
     }
     location.reload();
@@ -237,9 +247,9 @@ export default function TeamPanel({
             <select
               className="input"
               value={inviteRole}
-              onChange={(e) => setInviteRole(e.target.value as 'admin' | 'receptionist')}
+              onChange={(e) => setInviteRole(e.target.value as 'admin' | 'member')}
             >
-              <option value="receptionist">Team member</option>
+              <option value="member">Team member</option>
               <option value="admin">Admin</option>
             </select>
           </div>
@@ -283,8 +293,8 @@ export default function TeamPanel({
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-medium truncate">{inv.email}</p>
-                    <p className="text-xs text-slate-500 capitalize">
-                      {inv.role} · invited {relTime(inv.created_at)} · expires {relTime(inv.expires_at)}
+                    <p className="text-xs text-slate-500">
+                      {roleLabel(inv.role)} · invited {relTime(inv.created_at)} · expires {relTime(inv.expires_at)}
                     </p>
                   </div>
                   {isAdmin && (
@@ -335,7 +345,7 @@ export default function TeamPanel({
                   {m.full_name}{' '}
                   {isSelf && <span className="text-xs text-slate-400">(you)</span>}
                 </p>
-                <p className="text-xs text-slate-500 capitalize">{m.role}</p>
+                <p className="text-xs text-slate-500">{roleLabel(m.role)}</p>
               </div>
               {isAdmin && !isSelf && (
                 <>
@@ -343,11 +353,11 @@ export default function TeamPanel({
                     className="input !py-1.5 !text-xs w-32"
                     value={m.role}
                     onChange={(e) =>
-                      changeRole(m, e.target.value as 'admin' | 'receptionist')
+                      changeRole(m, e.target.value as 'admin' | 'member')
                     }
                     disabled={busyRow}
                   >
-                    <option value="receptionist">Team member</option>
+                    <option value="member">Team member</option>
                     <option value="admin">Admin</option>
                   </select>
                   <button
@@ -456,6 +466,12 @@ export default function TeamPanel({
       })()}
     </div>
   );
+}
+
+function roleLabel(role: string): string {
+  if (role === 'admin') return 'Admin';
+  if (role === 'member' || role === 'receptionist') return 'Team member';
+  return role;
 }
 
 function relTime(iso: string): string {

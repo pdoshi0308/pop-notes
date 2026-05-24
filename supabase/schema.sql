@@ -31,7 +31,7 @@ create table if not exists public.workspaces (
 create table if not exists public.users (
   id            uuid primary key references auth.users(id) on delete cascade,
   workspace_id  uuid references public.workspaces(id) on delete set null,
-  role          text not null default 'receptionist' check (role in ('admin', 'receptionist')),
+  role          text not null default 'member' check (role in ('admin', 'member')),
   full_name     text,
   created_at    timestamptz not null default now()
 );

@@ -18,7 +18,7 @@
 
   let session = null;          // { access_token, refresh_token, ... }
   let workspace = null;        // { id, name, pusher_key, pusher_cluster }
-  let role = null;             // 'admin' | 'receptionist'
+  let role = null;             // 'admin' | 'member'
   let pusher = null;
   let activeChannel = null;
   let pendingE164 = null;

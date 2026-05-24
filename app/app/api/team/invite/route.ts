@@ -20,24 +20,29 @@ export async function POST(req: NextRequest) {
 
     const body = (await req.json()) as { email?: string; role?: string };
     const email = (body.email ?? '').trim().toLowerCase();
-    const role = body.role === 'admin' ? 'admin' : 'receptionist';
+    const role = body.role === 'admin' ? 'admin' : 'member';
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return jsonError('Enter a valid email', 400);
     }
 
     const admin = createSupabaseAdminClient();
 
-    // Already in this workspace?
-    const { data: existing } = await admin
-      .from('users')
-      .select('id')
-      .eq('workspace_id', profile.workspace_id)
-      .limit(50); // small workspace; client-side filter on auth user join not needed
-    // (existence by email is checked below via auth lookup)
-
     // Don't allow inviting yourself.
     if (email === caller.email?.toLowerCase()) {
       return jsonError('You are already in this workspace', 400);
+    }
+
+    // Already a member of this workspace?
+    const existingAuthUser = await findAuthUserByEmail(admin, email);
+    if (existingAuthUser) {
+      const { data: existingProfile } = await admin
+        .from('users')
+        .select('workspace_id')
+        .eq('id', existingAuthUser.id)
+        .maybeSingle();
+      if (existingProfile?.workspace_id === profile.workspace_id) {
+        return jsonError('They are already in this workspace', 400);
+      }
     }
 
     // Upsert the invitation row.
@@ -50,6 +55,7 @@ export async function POST(req: NextRequest) {
           role,
           invited_by: caller.id,
           accepted_at: null,
+          auth_user_id: existingAuthUser?.id ?? null,
           // refresh expiry on every resend
           expires_at: new Date(Date.now() + 7 * 24 * 3600 * 1000).toISOString(),
         },
@@ -61,34 +67,51 @@ export async function POST(req: NextRequest) {
       return jsonError(inviteErr?.message ?? 'Could not create invitation', 400);
     }
 
-    // Existing auth user? If yes, we can't re-invite via inviteUserByEmail
-    // (Supabase rejects it). For v1 we surface a clear error so the admin
-    // knows the person already has a Pingform account; future work can
-    // support cross-workspace membership.
-    const { data: lookup } = await admin.auth.admin.listUsers({
-      page: 1,
-      perPage: 1,
-    });
-    void lookup; // listUsers doesn't filter — we rely on inviteUserByEmail's own duplicate check
-
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? brandUrl();
-    const { error: emailErr } = await admin.auth.admin.inviteUserByEmail(email, {
-      data: {
-        invitation_id: invitation.id,
-        invited_to_workspace: profile.workspace_id,
-        invited_role: role,
-      },
-      redirectTo: `${appUrl}/dashboard/accept-invite`,
-    });
+    const redirectTo = `${appUrl}/dashboard/accept-invite?inv=${invitation.id}`;
+
+    if (existingAuthUser) {
+      // The invitee already has an account. We can't use inviteUserByEmail
+      // (Supabase rejects it), so send them a magic-link email that drops
+      // them on /dashboard/accept-invite where they can confirm and join
+      // this workspace. Their existing password is untouched.
+      const { error: linkErr } = await admin.auth.admin.generateLink({
+        type: 'magiclink',
+        email,
+        options: { redirectTo },
+      });
+      if (linkErr) {
+        await admin.from('invitations').delete().eq('id', invitation.id);
+        return jsonError(linkErr.message, 400);
+      }
+      return NextResponse.json({ ok: true, existing_user: true });
+    }
+
+    // Brand-new email: send the Supabase invite email so they can set a
+    // password. Metadata is read by handle_new_auth_user to attach them
+    // straight to the inviting workspace.
+    const { data: created, error: emailErr } =
+      await admin.auth.admin.inviteUserByEmail(email, {
+        data: {
+          invitation_id: invitation.id,
+          invited_to_workspace: profile.workspace_id,
+          invited_role: role,
+        },
+        redirectTo,
+      });
 
     if (emailErr) {
-      // Roll back the invitation if the email failed so the dashboard
-      // doesn't show a "pending" row that never received an email.
       await admin.from('invitations').delete().eq('id', invitation.id);
-      const msg = /already.*registered/i.test(emailErr.message)
-        ? 'That email already has a Pingform account. Ask them to sign in instead.'
-        : emailErr.message;
-      return jsonError(msg, 400);
+      return jsonError(emailErr.message, 400);
+    }
+
+    // Remember the stub auth user we just minted so revoke can clean it up
+    // without scanning auth.users.
+    if (created?.user?.id) {
+      await admin
+        .from('invitations')
+        .update({ auth_user_id: created.user.id })
+        .eq('id', invitation.id);
     }
 
     return NextResponse.json({ ok: true });
@@ -111,7 +134,7 @@ export async function DELETE(req: NextRequest) {
     // Only delete invites that belong to the admin's workspace.
     const { data: row } = await admin
       .from('invitations')
-      .select('id, email, accepted_at')
+      .select('id, email, accepted_at, auth_user_id')
       .eq('id', id)
       .eq('workspace_id', profile.workspace_id)
       .maybeSingle();
@@ -119,19 +142,24 @@ export async function DELETE(req: NextRequest) {
 
     await admin.from('invitations').delete().eq('id', id);
 
-    // If the invitee never accepted, we also delete the half-created
-    // auth user that inviteUserByEmail produced — otherwise the email
-    // address is stuck and can't be re-invited.
-    if (!row.accepted_at) {
-      const { data: list } = await admin.auth.admin.listUsers({
-        page: 1,
-        perPage: 200,
-      });
-      const stub = list?.users?.find(
-        (u) => u.email?.toLowerCase() === row.email.toLowerCase() && !u.last_sign_in_at
+    // If the invitee never accepted, also delete the stub auth user that
+    // inviteUserByEmail produced — otherwise the address is stuck and can't
+    // be re-invited. We only do this if that stub never confirmed/used the
+    // account (no last_sign_in_at, no other workspace).
+    if (!row.accepted_at && row.auth_user_id) {
+      const { data: stubAuth } = await admin.auth.admin.getUserById(
+        row.auth_user_id
       );
-      if (stub) {
-        await admin.auth.admin.deleteUser(stub.id);
+      const { data: stubProfile } = await admin
+        .from('users')
+        .select('workspace_id')
+        .eq('id', row.auth_user_id)
+        .maybeSingle();
+      const hasOtherWorkspace =
+        stubProfile?.workspace_id &&
+        stubProfile.workspace_id !== profile.workspace_id;
+      if (stubAuth?.user && !stubAuth.user.last_sign_in_at && !hasOtherWorkspace) {
+        await admin.auth.admin.deleteUser(row.auth_user_id);
       }
     }
 
@@ -140,6 +168,26 @@ export async function DELETE(req: NextRequest) {
     console.error('[/api/team/invite DELETE]', err);
     return jsonError('Could not revoke invite', 500);
   }
+}
+
+/**
+ * Find an auth user by email by paginating listUsers (Supabase doesn't
+ * expose a server-side filter). Returns null when not found.
+ */
+async function findAuthUserByEmail(
+  admin: ReturnType<typeof createSupabaseAdminClient>,
+  email: string
+) {
+  const target = email.toLowerCase();
+  const perPage = 1000;
+  for (let page = 1; page <= 50; page++) {
+    const { data, error } = await admin.auth.admin.listUsers({ page, perPage });
+    if (error || !data) return null;
+    const hit = data.users.find((u) => u.email?.toLowerCase() === target);
+    if (hit) return hit;
+    if (data.users.length < perPage) return null;
+  }
+  return null;
 }
 
 async function authedAdmin(req: NextRequest) {
