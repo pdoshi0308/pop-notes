@@ -16,7 +16,7 @@ export default async function FormPage() {
 
   const { data: profile } = await supabase
     .from('users')
-    .select('workspace_id')
+    .select('workspace_id, role')
     .eq('id', user.id)
     .maybeSingle();
   if (!profile?.workspace_id) redirect('/dashboard/login?error=no_workspace');
@@ -36,5 +36,11 @@ export default async function FormPage() {
     label: f.label,
   }));
 
-  return <FormBuilder workspaceId={profile.workspace_id} initial={resolved} />;
+  return (
+    <FormBuilder
+      workspaceId={profile.workspace_id}
+      initial={resolved}
+      canEdit={profile.role === 'admin'}
+    />
+  );
 }

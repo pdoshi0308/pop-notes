@@ -11,7 +11,7 @@ export default async function SmsPage() {
 
   const { data: profile } = await supabase
     .from('users')
-    .select('workspace_id')
+    .select('workspace_id, role')
     .eq('id', user.id)
     .maybeSingle();
   if (!profile?.workspace_id) redirect('/dashboard/login?error=no_workspace');
@@ -30,6 +30,7 @@ export default async function SmsPage() {
         ws?.sms_template ||
         'Hi! {practice_name} has asked you to complete a quick registration form. It only takes 1 minute 👉 {link}'
       }
+      canEdit={profile.role === 'admin'}
     />
   );
 }

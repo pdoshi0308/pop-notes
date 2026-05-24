@@ -14,10 +14,12 @@ export default function SmsEditor({
   workspaceId,
   practiceName,
   initial,
+  canEdit,
 }: {
   workspaceId: string;
   practiceName: string;
   initial: string;
+  canEdit: boolean;
 }) {
   const [body, setBody] = useState(initial);
   const [saving, setSaving] = useState(false);
@@ -64,19 +66,23 @@ export default function SmsEditor({
         <div>
           <h1 className="text-3xl font-bold tracking-tight">SMS Editor</h1>
           <p className="text-slate-600 mt-1">
-            Customise what the client sees when your team sends the form.
+            {canEdit
+              ? 'Customise what the client sees when your team sends the form.'
+              : 'Read-only — only admins can change the SMS template.'}
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          {saved && (
-            <span className="text-sm text-brand-success font-medium animate-fade-in">
-              Saved
-            </span>
-          )}
-          <button className="btn-primary" onClick={save} disabled={saving}>
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save'}
-          </button>
-        </div>
+        {canEdit && (
+          <div className="flex items-center gap-3">
+            {saved && (
+              <span className="text-sm text-brand-success font-medium animate-fade-in">
+                Saved
+              </span>
+            )}
+            <button className="btn-primary" onClick={save} disabled={saving}>
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save'}
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="grid lg:grid-cols-[1fr_360px] gap-8">
@@ -84,23 +90,25 @@ export default function SmsEditor({
           <label className="label">Message</label>
           <textarea
             ref={ref}
-            className="input min-h-[160px] font-mono text-sm"
+            className="input min-h-[160px] font-mono text-sm disabled:cursor-not-allowed"
             value={body}
             onChange={(e) => setBody(e.target.value)}
+            disabled={!canEdit}
           />
           <div className="flex items-center justify-between mt-2">
             <div className="flex gap-2 flex-wrap">
-              {VARIABLES.map((v) => (
-                <button
-                  key={v.token}
-                  type="button"
-                  onClick={() => insertVariable(v.token)}
-                  className="text-xs px-2 py-1 rounded-full bg-rose-50 text-brand-primary font-medium hover:bg-rose-100"
-                  title={`Insert ${v.token}`}
-                >
-                  {v.label}
-                </button>
-              ))}
+              {canEdit &&
+                VARIABLES.map((v) => (
+                  <button
+                    key={v.token}
+                    type="button"
+                    onClick={() => insertVariable(v.token)}
+                    className="text-xs px-2 py-1 rounded-full bg-rose-50 text-brand-primary font-medium hover:bg-rose-100"
+                    title={`Insert ${v.token}`}
+                  >
+                    {v.label}
+                  </button>
+                ))}
             </div>
             <p className="text-xs text-slate-500">
               {body.length} chars · {Math.ceil(body.length / 160) || 1} SMS

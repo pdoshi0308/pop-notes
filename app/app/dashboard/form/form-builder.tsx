@@ -29,9 +29,11 @@ interface BuilderEntry {
 export default function FormBuilder({
   workspaceId,
   initial,
+  canEdit,
 }: {
   workspaceId: string;
   initial: BuilderEntry[];
+  canEdit: boolean;
 }) {
   const [entries, setEntries] = useState<BuilderEntry[]>(initial);
   const [saving, setSaving] = useState(false);
@@ -102,19 +104,23 @@ export default function FormBuilder({
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Form Builder</h1>
           <p className="text-slate-600 mt-1">
-            Drag to reorder. Toggle which fields are required.
+            {canEdit
+              ? 'Drag to reorder. Toggle which fields are required.'
+              : 'Read-only — only admins can change the form.'}
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          {saved && (
-            <span className="text-sm text-brand-success font-medium animate-fade-in">
-              Saved
-            </span>
-          )}
-          <button className="btn-primary" onClick={save} disabled={saving}>
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save changes'}
-          </button>
-        </div>
+        {canEdit && (
+          <div className="flex items-center gap-3">
+            {saved && (
+              <span className="text-sm text-brand-success font-medium animate-fade-in">
+                Saved
+              </span>
+            )}
+            <button className="btn-primary" onClick={save} disabled={saving}>
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save changes'}
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="grid lg:grid-cols-[1fr_400px] gap-8">
@@ -130,6 +136,7 @@ export default function FormBuilder({
                   <SortableRow
                     key={entry.id}
                     entry={entry}
+                    canEdit={canEdit}
                     onRequiredChange={(r) => updateEntry(entry.id, { required: r })}
                     onLabelChange={(l) => updateEntry(entry.id, { label: l })}
                     onRemove={() => removeField(entry.id)}
@@ -139,7 +146,7 @@ export default function FormBuilder({
             </SortableContext>
           </DndContext>
 
-          {available.length > 0 && (
+          {canEdit && available.length > 0 && (
             <>
               <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mt-8 mb-3">
                 Add a field
@@ -183,18 +190,20 @@ export default function FormBuilder({
 // ---------------------------------------------------------------------------
 function SortableRow({
   entry,
+  canEdit,
   onRequiredChange,
   onLabelChange,
   onRemove,
 }: {
   entry: BuilderEntry;
+  canEdit: boolean;
   onRequiredChange: (v: boolean) => void;
   onLabelChange: (v: string) => void;
   onRemove: () => void;
 }) {
   const def = FIELD_BY_ID[entry.id];
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({ id: entry.id, disabled: !!def?.locked });
+    useSortable({ id: entry.id, disabled: !canEdit || !!def?.locked });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -211,22 +220,23 @@ function SortableRow({
       className="card p-3 flex items-center gap-3"
     >
       <button
-        className="p-1 text-slate-400 hover:text-slate-600 cursor-grab"
+        className="p-1 text-slate-400 hover:text-slate-600 cursor-grab disabled:cursor-not-allowed"
         {...attributes}
         {...listeners}
-        disabled={!!def.locked}
-        title={def.locked ? 'Locked' : 'Drag to reorder'}
+        disabled={!canEdit || !!def.locked}
+        title={!canEdit ? 'Read-only' : def.locked ? 'Locked' : 'Drag to reorder'}
       >
-        {def.locked ? <Lock className="w-4 h-4" /> : <GripVertical className="w-4 h-4" />}
+        {def.locked || !canEdit ? <Lock className="w-4 h-4" /> : <GripVertical className="w-4 h-4" />}
       </button>
 
       <div className="flex-1 min-w-0">
         {def.customLabel ? (
           <input
-            className="w-full text-sm font-medium bg-transparent border-none outline-none focus:bg-slate-50 px-1 py-0.5 rounded"
+            className="w-full text-sm font-medium bg-transparent border-none outline-none focus:bg-slate-50 px-1 py-0.5 rounded disabled:cursor-not-allowed"
             value={entry.label ?? def.label}
             onChange={(e) => onLabelChange(e.target.value)}
             placeholder="Custom label"
+            disabled={!canEdit}
           />
         ) : (
           <p className="text-sm font-medium truncate">{def.label}</p>
@@ -240,21 +250,23 @@ function SortableRow({
         <input
           type="checkbox"
           checked={entry.required || !!def.alwaysOn}
-          disabled={!!def.alwaysOn}
+          disabled={!canEdit || !!def.alwaysOn}
           onChange={(e) => onRequiredChange(e.target.checked)}
           className="accent-brand-primary"
         />
         Required
       </label>
 
-      <button
-        className="p-1.5 rounded-lg text-slate-400 hover:bg-red-50 hover:text-brand-error transition disabled:opacity-30 disabled:hover:bg-transparent"
-        onClick={onRemove}
-        disabled={!!def.alwaysOn}
-        title={def.alwaysOn ? 'This field is always on' : 'Remove'}
-      >
-        <Trash2 className="w-4 h-4" />
-      </button>
+      {canEdit && (
+        <button
+          className="p-1.5 rounded-lg text-slate-400 hover:bg-red-50 hover:text-brand-error transition disabled:opacity-30 disabled:hover:bg-transparent"
+          onClick={onRemove}
+          disabled={!!def.alwaysOn}
+          title={def.alwaysOn ? 'This field is always on' : 'Remove'}
+        >
+          <Trash2 className="w-4 h-4" />
+        </button>
+      )}
     </li>
   );
 }
