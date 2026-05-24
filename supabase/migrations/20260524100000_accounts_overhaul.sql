@@ -12,20 +12,26 @@
 
 -- =========================================================================
 -- 1. role: 'receptionist' -> 'member'
+--
+-- Drop the old CHECK constraints BEFORE updating the data — the old
+-- constraint only allows ('admin','receptionist'), so trying to UPDATE
+-- a row to 'member' while it's still in place fails with
+-- "new row violates check constraint users_role_check".
 -- =========================================================================
+alter table public.users
+  drop constraint if exists users_role_check;
+alter table public.invitations
+  drop constraint if exists invitations_role_check;
+
 update public.users        set role = 'member' where role = 'receptionist';
 update public.invitations  set role = 'member' where role = 'receptionist';
 
-alter table public.users
-  drop constraint if exists users_role_check;
 alter table public.users
   add constraint users_role_check
   check (role in ('admin', 'member'));
 alter table public.users
   alter column role set default 'member';
 
-alter table public.invitations
-  drop constraint if exists invitations_role_check;
 alter table public.invitations
   add constraint invitations_role_check
   check (role in ('admin', 'member'));
