@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Loader2, Mail, Trash2, RotateCw, Clock } from 'lucide-react';
+import { Loader2, Mail, Trash2, RotateCw, Clock, KeyRound, X } from 'lucide-react';
 import { createSupabaseBrowserClient } from '@/lib/supabase-browser';
 
 interface Member {
@@ -37,6 +37,8 @@ export default function TeamPanel({
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null);
   const [pendingRow, setPendingRow] = useState<string | null>(null);
+  const [passwordRow, setPasswordRow] = useState<string | null>(null);
+  const [newPassword, setNewPassword] = useState('');
 
   async function getToken(): Promise<string | null> {
     const supabase = createSupabaseBrowserClient();
@@ -133,6 +135,62 @@ export default function TeamPanel({
       return;
     }
     location.reload();
+  }
+
+  async function sendResetLink(member: Member) {
+    setPendingRow(member.id);
+    const token = await getToken();
+    const res = await fetch('/api/team/password', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ user_id: member.id, mode: 'reset' }),
+    });
+    const data = await res.json();
+    setPendingRow(null);
+    if (!res.ok || !data.ok) {
+      setNote({ kind: 'err', text: data.error ?? 'Could not send reset link' });
+      return;
+    }
+    setNote({
+      kind: 'ok',
+      text: `Password reset link sent to ${member.full_name}.`,
+    });
+  }
+
+  async function setMemberPassword(member: Member) {
+    if (!newPassword || newPassword.length < 6) {
+      setNote({ kind: 'err', text: 'Password must be at least 6 characters' });
+      return;
+    }
+    setPendingRow(member.id);
+    const token = await getToken();
+    const res = await fetch('/api/team/password', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        user_id: member.id,
+        mode: 'set',
+        password: newPassword,
+      }),
+    });
+    const data = await res.json();
+    setPendingRow(null);
+    if (!res.ok || !data.ok) {
+      setNote({ kind: 'err', text: data.error ?? 'Could not set password' });
+      return;
+    }
+    setNote({
+      kind: 'ok',
+      text: `New password set for ${member.full_name}. Share it with them securely.`,
+    });
+    setNewPassword('');
+    setPasswordRow(null);
   }
 
   async function remove(member: Member) {
@@ -293,6 +351,21 @@ export default function TeamPanel({
                     <option value="admin">Admin</option>
                   </select>
                   <button
+                    className="p-2 rounded-lg text-slate-500 hover:bg-slate-50 transition disabled:opacity-50"
+                    onClick={() => {
+                      setPasswordRow(passwordRow === m.id ? null : m.id);
+                      setNewPassword('');
+                    }}
+                    disabled={busyRow}
+                    title="Password options"
+                  >
+                    {passwordRow === m.id ? (
+                      <X className="w-4 h-4" />
+                    ) : (
+                      <KeyRound className="w-4 h-4" />
+                    )}
+                  </button>
+                  <button
                     className="p-2 rounded-lg text-slate-400 hover:bg-red-50 hover:text-brand-error transition disabled:opacity-50"
                     onClick={() => remove(m)}
                     disabled={busyRow}
@@ -310,6 +383,77 @@ export default function TeamPanel({
           );
         })}
       </ul>
+
+      {/* Password panel for the selected member */}
+      {passwordRow && (() => {
+        const target = members.find((m) => m.id === passwordRow);
+        if (!target) return null;
+        const busyRow = pendingRow === target.id;
+        return (
+          <div className="card p-5 mt-4 border-slate-200">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="font-semibold">Password for {target.full_name}</p>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Send them a reset link so they can pick their own, or set one directly for them.
+                </p>
+              </div>
+              <button
+                className="p-2 rounded-lg text-slate-400 hover:bg-slate-50"
+                onClick={() => {
+                  setPasswordRow(null);
+                  setNewPassword('');
+                }}
+                title="Close"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <button
+              className="btn-secondary mt-4"
+              onClick={() => sendResetLink(target)}
+              disabled={busyRow}
+            >
+              {busyRow ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <>
+                  <Mail className="w-4 h-4" /> Send reset link
+                </>
+              )}
+            </button>
+
+            <div className="my-4 flex items-center gap-3">
+              <span className="flex-1 h-px bg-slate-200" />
+              <span className="text-xs text-slate-400 uppercase tracking-wider">or</span>
+              <span className="flex-1 h-px bg-slate-200" />
+            </div>
+
+            <div className="grid sm:grid-cols-[1fr_auto] gap-2">
+              <input
+                type="password"
+                className="input"
+                placeholder="Set a new password (min 6 chars)"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                minLength={6}
+                autoComplete="new-password"
+              />
+              <button
+                className="btn-primary"
+                onClick={() => setMemberPassword(target)}
+                disabled={busyRow || newPassword.length < 6}
+              >
+                {busyRow ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Set password'}
+              </button>
+            </div>
+            <p className="text-[11px] text-slate-400 mt-2">
+              They&apos;ll be able to sign in with this immediately. Share it through a secure channel.
+            </p>
+          </div>
+        );
+      })()}
     </div>
   );
 }
