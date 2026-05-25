@@ -14,20 +14,50 @@ export default function ResetPassword() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [ready, setReady] = useState(false);
+  const [checked, setChecked] = useState(false);
   const [done, setDone] = useState(false);
 
-  // Supabase turns the recovery link into a session once the SDK processes the
-  // URL hash. Wait for that session before letting the user set a password.
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) setReady(true);
+    let cancelled = false;
+
+    function hasRecoveryHint(): boolean {
+      if (typeof window === 'undefined') return false;
+      const search = window.location.search;
+      const hash = window.location.hash;
+      return (
+        search.includes('code=') ||
+        hash.includes('type=recovery') ||
+        hash.includes('access_token=')
+      );
+    }
+
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      if (cancelled) return;
+      if (event === 'PASSWORD_RECOVERY' && session) {
+        setReady(true);
+        setChecked(true);
+      }
     });
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) setReady(true);
-    });
-    return () => sub.subscription.unsubscribe();
-  }, []);
+
+    (async () => {
+      const { data } = await supabase.auth.getSession();
+      if (cancelled) return;
+      if (data.session && !hasRecoveryHint()) {
+        router.replace('/dashboard/account');
+        return;
+      }
+      if (data.session && hasRecoveryHint()) {
+        setReady(true);
+      }
+      setChecked(true);
+    })();
+
+    return () => {
+      cancelled = true;
+      sub.subscription.unsubscribe();
+    };
+  }, [router]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -69,6 +99,10 @@ export default function ResetPassword() {
             </div>
             <h1 className="mt-4 text-xl font-semibold">Password updated</h1>
             <p className="mt-2 text-sm text-slate-600">Signing you in…</p>
+          </div>
+        ) : !checked ? (
+          <div className="text-center py-6">
+            <Loader2 className="w-5 h-5 animate-spin mx-auto text-slate-400" />
           </div>
         ) : !ready ? (
           <div className="text-center py-6">

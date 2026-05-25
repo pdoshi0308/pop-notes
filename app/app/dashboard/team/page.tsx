@@ -1,20 +1,8 @@
-import { redirect } from 'next/navigation';
-import { createSupabaseServerClient } from '@/lib/supabase-server';
+import { requireAdmin } from '@/lib/auth-guards';
 import TeamPanel from './team-panel';
 
 export default async function TeamPage() {
-  const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect('/dashboard/login');
-
-  const { data: profile } = await supabase
-    .from('users')
-    .select('workspace_id, role')
-    .eq('id', user.id)
-    .maybeSingle();
-  if (!profile?.workspace_id) redirect('/dashboard/login?error=no_workspace');
+  const { supabase, user, profile } = await requireAdmin();
 
   const [{ data: members }, { data: invitations }] = await Promise.all([
     supabase
@@ -33,7 +21,7 @@ export default async function TeamPage() {
     <TeamPanel
       workspaceId={profile.workspace_id}
       currentUserId={user.id}
-      isAdmin={profile.role === 'admin'}
+      isAdmin={true}
       members={(members ?? []).map((m) => ({
         id: m.id,
         full_name: m.full_name ?? '—',

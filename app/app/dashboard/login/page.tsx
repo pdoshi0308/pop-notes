@@ -14,6 +14,8 @@ const ERROR_MESSAGES: Record<string, string> = {
     'That invitation link has expired or been revoked. Ask the admin to send a new one.',
   accept_invite_needs_session:
     'The invitation link couldn\'t sign you in. Open the original email and click the link again.',
+  idle:
+    'You were signed out after a long period of inactivity. Sign in again to continue.',
 };
 
 export default function DashboardLogin() {

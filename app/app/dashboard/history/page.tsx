@@ -1,8 +1,9 @@
 import Link from 'next/link';
-import { redirect } from 'next/navigation';
 import { Lock, Search } from 'lucide-react';
+import { requireAdmin } from '@/lib/auth-guards';
 import { createSupabaseServerClient } from '@/lib/supabase-server';
 import { FIELD_BY_ID } from '@/lib/fields';
+import DeleteSubmissionButton from './delete-button';
 
 interface Submission {
   id: string;
@@ -22,18 +23,7 @@ export default async function HistoryPage({
   const q = (params.q ?? '').trim();
   const page = Math.max(1, parseInt(params.page ?? '1', 10) || 1);
 
-  const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect('/dashboard/login');
-
-  const { data: profile } = await supabase
-    .from('users')
-    .select('workspace_id')
-    .eq('id', user.id)
-    .maybeSingle();
-  if (!profile?.workspace_id) redirect('/dashboard/login?error=no_workspace');
+  const { supabase, profile } = await requireAdmin();
 
   const { data: ws } = await supabase
     .from('workspaces')
@@ -44,7 +34,7 @@ export default async function HistoryPage({
   const isPaid = (ws?.plan ?? 'free') !== 'free';
 
   return (
-    <div className="px-8 py-10 max-w-4xl">
+    <div className="px-6 md:px-8 py-8 md:py-10 max-w-4xl">
       <h1 className="text-3xl font-bold tracking-tight">Submission history</h1>
       <p className="text-slate-600 mt-1">
         Every completed registration form, saved and searchable.
@@ -77,7 +67,6 @@ async function HistoryList({
     .order('created_at', { ascending: false });
 
   if (q) {
-    // Postgres `or` filter — match phone OR the jsonb full_name field.
     const escaped = q.replace(/[%_]/g, (c) => `\\${c}`);
     query = query.or(
       `phone.ilike.%${escaped}%,fields->>full_name.ilike.%${escaped}%`
@@ -86,7 +75,18 @@ async function HistoryList({
 
   const from = (page - 1) * PAGE_SIZE;
   const to = from + PAGE_SIZE - 1;
-  const { data, count } = await query.range(from, to);
+  const { data, count, error } = await query.range(from, to);
+
+  if (error) {
+    return (
+      <div className="card p-6 mt-6 border-rose-100">
+        <p className="text-sm text-rose-700 font-medium">
+          Could not load submissions: {error.message}
+        </p>
+      </div>
+    );
+  }
+
   const submissions = (data ?? []) as Submission[];
   const total = count ?? submissions.length;
   const hasPrev = page > 1;
@@ -136,30 +136,34 @@ async function HistoryList({
             {q && ` for "${q}"`}
           </p>
           <div className="mt-3 space-y-3">
-            {submissions.map((s) => (
-              <div key={s.id} className="card p-5">
-                <div className="flex items-center justify-between gap-3">
-                  <p className="font-semibold">
-                    {String(s.fields?.full_name ?? s.phone ?? 'Submission')}
-                  </p>
-                  <time className="text-xs text-slate-400">
-                    {new Date(s.created_at).toLocaleString('en-GB')}
-                  </time>
+            {submissions.map((s) => {
+              const label = String(s.fields?.full_name ?? s.phone ?? 'Submission');
+              return (
+                <div key={s.id} className="card p-5">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="font-semibold">{label}</p>
+                    <div className="flex items-center gap-3">
+                      <time className="text-xs text-slate-400">
+                        {new Date(s.created_at).toLocaleString('en-GB')}
+                      </time>
+                      <DeleteSubmissionButton id={s.id} label={label} />
+                    </div>
+                  </div>
+                  <dl className="mt-3 grid sm:grid-cols-2 gap-x-6 gap-y-1.5 text-sm">
+                    {Object.entries(s.fields ?? {}).map(([k, v]) => {
+                      if (v === '' || v == null) return null;
+                      const fieldLabel = FIELD_BY_ID[k]?.label ?? k.replace(/_/g, ' ');
+                      return (
+                        <div key={k} className="flex gap-2">
+                          <dt className="text-slate-400 shrink-0">{fieldLabel}:</dt>
+                          <dd className="text-slate-700 break-words">{String(v)}</dd>
+                        </div>
+                      );
+                    })}
+                  </dl>
                 </div>
-                <dl className="mt-3 grid sm:grid-cols-2 gap-x-6 gap-y-1.5 text-sm">
-                  {Object.entries(s.fields ?? {}).map(([k, v]) => {
-                    if (v === '' || v == null) return null;
-                    const label = FIELD_BY_ID[k]?.label ?? k.replace(/_/g, ' ');
-                    return (
-                      <div key={k} className="flex gap-2">
-                        <dt className="text-slate-400 shrink-0">{label}:</dt>
-                        <dd className="text-slate-700 break-words">{String(v)}</dd>
-                      </div>
-                    );
-                  })}
-                </dl>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {(hasPrev || hasNext) && (

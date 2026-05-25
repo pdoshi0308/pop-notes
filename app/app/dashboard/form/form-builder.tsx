@@ -19,6 +19,8 @@ import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, Loader2, Lock, Plus, Trash2 } from 'lucide-react';
 import { FIELD_CATALOGUE, FIELD_BY_ID } from '@/lib/fields';
 import { createSupabaseBrowserClient } from '@/lib/supabase-browser';
+import { useUnsavedChanges } from '@/lib/use-unsaved-changes';
+import { Notice, type NoticeState } from '../components/notice';
 
 interface BuilderEntry {
   id: string;
@@ -36,8 +38,16 @@ export default function FormBuilder({
   canEdit: boolean;
 }) {
   const [entries, setEntries] = useState<BuilderEntry[]>(initial);
+  const [savedSnapshot, setSavedSnapshot] = useState<BuilderEntry[]>(initial);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [note, setNote] = useState<NoticeState>(null);
+
+  const dirty = useMemo(
+    () => JSON.stringify(entries) !== JSON.stringify(savedSnapshot),
+    [entries, savedSnapshot]
+  );
+  useUnsavedChanges(dirty);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
 
@@ -50,8 +60,6 @@ export default function FormBuilder({
     setEntries((prev) => {
       const oldIndex = prev.findIndex((p) => p.id === active.id);
       const newIndex = prev.findIndex((p) => p.id === over.id);
-      // Don't allow dropping above a locked-locked field if it disturbs ordering;
-      // dnd-kit gives us a clean swap so just do the move.
       return arrayMove(prev, oldIndex, newIndex);
     });
   }
@@ -71,8 +79,8 @@ export default function FormBuilder({
   async function save() {
     setSaving(true);
     setSaved(false);
+    setNote(null);
     const supabase = createSupabaseBrowserClient();
-    // Persist the minimal shape we read at runtime: id, required, label override.
     const payload = entries.map((e) => {
       const def = FIELD_BY_ID[e.id];
       const out: BuilderEntry = { id: e.id, required: !!e.required };
@@ -91,16 +99,17 @@ export default function FormBuilder({
       );
     setSaving(false);
     if (!error) {
+      setSavedSnapshot(entries);
       setSaved(true);
       setTimeout(() => setSaved(false), 1800);
     } else {
-      alert(error.message);
+      setNote({ kind: 'err', text: error.message });
     }
   }
 
   return (
-    <div className="px-8 py-10 max-w-6xl">
-      <div className="flex items-center justify-between mb-8">
+    <div className="px-6 md:px-8 py-8 md:py-10 max-w-6xl">
+      <div className="flex items-center justify-between mb-8 gap-3 flex-wrap">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Form Builder</h1>
           <p className="text-slate-600 mt-1">
@@ -116,15 +125,16 @@ export default function FormBuilder({
                 Saved
               </span>
             )}
-            <button className="btn-primary" onClick={save} disabled={saving}>
+            <button className="btn-primary" onClick={save} disabled={saving || !dirty}>
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save changes'}
             </button>
           </div>
         )}
       </div>
 
+      {note && <div className="mb-4"><Notice note={note} /></div>}
+
       <div className="grid lg:grid-cols-[1fr_400px] gap-8">
-        {/* Sortable list */}
         <div>
           <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3">
             On the form
@@ -173,7 +183,6 @@ export default function FormBuilder({
           )}
         </div>
 
-        {/* Live preview */}
         <aside>
           <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3">
             Preview
@@ -185,9 +194,6 @@ export default function FormBuilder({
   );
 }
 
-// ---------------------------------------------------------------------------
-// Sortable row
-// ---------------------------------------------------------------------------
 function SortableRow({
   entry,
   canEdit,
@@ -271,9 +277,6 @@ function SortableRow({
   );
 }
 
-// ---------------------------------------------------------------------------
-// Phone-shaped preview
-// ---------------------------------------------------------------------------
 function PhonePreview({ entries }: { entries: BuilderEntry[] }) {
   return (
     <div className="mx-auto w-[300px] rounded-[36px] border border-slate-200 bg-white p-3 shadow-card">

@@ -13,7 +13,7 @@ import {
   UserCircle,
 } from 'lucide-react';
 
-const ITEMS = [
+const ADMIN_ITEMS = [
   { href: '/dashboard', label: 'Overview', icon: LayoutGrid },
   { href: '/dashboard/form', label: 'Form Builder', icon: ClipboardList },
   { href: '/dashboard/sms', label: 'SMS Editor', icon: MessageSquareText },
@@ -24,18 +24,31 @@ const ITEMS = [
   { href: '/dashboard/account', label: 'Account', icon: UserCircle },
 ];
 
-export default function NavLinks({ role }: { role: string }) {
+const MEMBER_ITEMS = [
+  { href: '/dashboard', label: 'Overview', icon: LayoutGrid },
+  { href: '/dashboard/account', label: 'Account', icon: UserCircle },
+];
+
+export default function NavLinks({
+  role,
+  onNavigate,
+}: {
+  role: string;
+  onNavigate?: () => void;
+}) {
   const path = usePathname();
+  const items = role === 'admin' ? ADMIN_ITEMS : MEMBER_ITEMS;
 
   return (
     <nav className="flex-1 px-3 py-4 space-y-0.5">
-      {ITEMS.map((item) => {
+      {items.map((item) => {
         const active = path === item.href;
         const Icon = item.icon;
         return (
           <Link
             key={item.href}
             href={item.href}
+            onClick={onNavigate}
             className={[
               'flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition',
               active
@@ -48,11 +61,6 @@ export default function NavLinks({ role }: { role: string }) {
           </Link>
         );
       })}
-      {role !== 'admin' && (
-        <p className="px-3 pt-3 text-xs text-slate-400">
-          You&apos;re signed in as a team member. Some sections may be read-only.
-        </p>
-      )}
     </nav>
   );
 }

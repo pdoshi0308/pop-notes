@@ -4,6 +4,8 @@ import { useRef, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { createSupabaseBrowserClient } from '@/lib/supabase-browser';
 import { BRAND } from '@/lib/brand';
+import { useUnsavedChanges } from '@/lib/use-unsaved-changes';
+import { Notice, type NoticeState } from '../components/notice';
 
 const VARIABLES = [
   { token: '{practice_name}', label: 'Business name' },
@@ -22,9 +24,14 @@ export default function SmsEditor({
   canEdit: boolean;
 }) {
   const [body, setBody] = useState(initial);
+  const [savedSnapshot, setSavedSnapshot] = useState(initial);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [note, setNote] = useState<NoticeState>(null);
   const ref = useRef<HTMLTextAreaElement | null>(null);
+
+  const dirty = body !== savedSnapshot;
+  useUnsavedChanges(dirty);
 
   function insertVariable(token: string) {
     const el = ref.current;
@@ -42,6 +49,7 @@ export default function SmsEditor({
   async function save() {
     setSaving(true);
     setSaved(false);
+    setNote(null);
     const supabase = createSupabaseBrowserClient();
     const { error } = await supabase
       .from('workspaces')
@@ -49,10 +57,11 @@ export default function SmsEditor({
       .eq('id', workspaceId);
     setSaving(false);
     if (!error) {
+      setSavedSnapshot(body);
       setSaved(true);
       setTimeout(() => setSaved(false), 1800);
     } else {
-      alert(error.message);
+      setNote({ kind: 'err', text: error.message });
     }
   }
 
@@ -61,8 +70,8 @@ export default function SmsEditor({
     .replaceAll('{link}', `${BRAND.domain}/register?…`);
 
   return (
-    <div className="px-8 py-10 max-w-5xl">
-      <div className="flex items-center justify-between mb-8">
+    <div className="px-6 md:px-8 py-8 md:py-10 max-w-5xl">
+      <div className="flex items-center justify-between mb-8 gap-3 flex-wrap">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">SMS Editor</h1>
           <p className="text-slate-600 mt-1">
@@ -78,12 +87,14 @@ export default function SmsEditor({
                 Saved
               </span>
             )}
-            <button className="btn-primary" onClick={save} disabled={saving}>
+            <button className="btn-primary" onClick={save} disabled={saving || !dirty}>
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save'}
             </button>
           </div>
         )}
       </div>
+
+      {note && <div className="mb-4"><Notice note={note} /></div>}
 
       <div className="grid lg:grid-cols-[1fr_360px] gap-8">
         <div>

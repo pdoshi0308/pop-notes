@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Loader2, AlertTriangle } from 'lucide-react';
 import { createSupabaseBrowserClient } from '@/lib/supabase-browser';
+import { Notice, type NoticeState } from '../components/notice';
 
 export default function AccountForm({
   email: initialEmail,
@@ -23,6 +24,7 @@ export default function AccountForm({
   const [name, setName] = useState(initialName);
   const [savingName, setSavingName] = useState(false);
   const [nameSaved, setNameSaved] = useState(false);
+  const [nameNote, setNameNote] = useState<NoticeState>(null);
 
   const [newEmail, setNewEmail] = useState('');
   const [emailBusy, setEmailBusy] = useState(false);
@@ -46,6 +48,7 @@ export default function AccountForm({
   async function saveName() {
     setSavingName(true);
     setNameSaved(false);
+    setNameNote(null);
     const token = await getToken();
     const res = await fetch('/api/account', {
       method: 'PATCH',
@@ -62,7 +65,7 @@ export default function AccountForm({
       router.refresh();
     } else {
       const data = await res.json().catch(() => ({}));
-      alert(data.error ?? 'Could not save');
+      setNameNote({ kind: 'err', text: data.error ?? 'Could not save' });
     }
   }
 
@@ -211,6 +214,7 @@ export default function AccountForm({
               onChange={(e) => setName(e.target.value)}
             />
           </div>
+          {nameNote && <Notice note={nameNote} />}
           <div className="flex items-center gap-3">
             {nameSaved && (
               <span className="text-sm text-brand-success font-medium animate-fade-in">

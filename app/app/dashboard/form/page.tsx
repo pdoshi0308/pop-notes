@@ -1,5 +1,4 @@
-import { redirect } from 'next/navigation';
-import { createSupabaseServerClient } from '@/lib/supabase-server';
+import { requireAdmin } from '@/lib/auth-guards';
 import {
   resolveFormConfig,
   DEFAULT_FORM_CONFIG,
@@ -8,18 +7,7 @@ import {
 import FormBuilder from './form-builder';
 
 export default async function FormPage() {
-  const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect('/dashboard/login');
-
-  const { data: profile } = await supabase
-    .from('users')
-    .select('workspace_id, role')
-    .eq('id', user.id)
-    .maybeSingle();
-  if (!profile?.workspace_id) redirect('/dashboard/login?error=no_workspace');
+  const { supabase, profile } = await requireAdmin();
 
   const { data: cfg } = await supabase
     .from('form_configs')
@@ -29,7 +17,6 @@ export default async function FormPage() {
 
   const initial: FormConfigEntry[] =
     (cfg?.fields as FormConfigEntry[] | undefined) ?? DEFAULT_FORM_CONFIG;
-  // Run through resolver to fill in always-on locked fields.
   const resolved = resolveFormConfig(initial).map((f) => ({
     id: f.id,
     required: f.required,
@@ -40,7 +27,7 @@ export default async function FormPage() {
     <FormBuilder
       workspaceId={profile.workspace_id}
       initial={resolved}
-      canEdit={profile.role === 'admin'}
+      canEdit={true}
     />
   );
 }
