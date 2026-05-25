@@ -9,6 +9,9 @@ import {
   ClipboardList,
   Sparkles,
   SpellCheck,
+  EyeOff,
+  Lock,
+  Check,
 } from 'lucide-react';
 import { MarketingNav, MarketingFooter } from '@/components/marketing-nav';
 import { PricingTable } from '@/components/pricing-table';
@@ -23,17 +26,18 @@ export default function HomePage() {
       <section className="px-5 sm:px-8 pt-16 pb-24 max-w-6xl mx-auto text-center">
         <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-50 text-brand-primary text-sm font-medium">
           <span className="w-1.5 h-1.5 rounded-full bg-brand-primary animate-pulse" />
-          New for UK businesses
+          Free up to 10 SMS forms / month — no card
         </span>
         <h1 className="mt-6 text-4xl sm:text-6xl font-extrabold tracking-tight leading-tight">
-          Send registration forms{' '}
-          <span className="text-brand-primary">over SMS</span>,<br className="hidden sm:block" />
-          get the details back instantly.
+          Skip the awkward{' '}
+          <span className="text-brand-primary">front-desk form</span>.<br className="hidden sm:block" />
+          Text it. Done in under a minute.
         </h1>
         <p className="mt-5 text-lg text-slate-600 max-w-2xl mx-auto">
-          {BRAND.name} lets your front desk text a client a registration
-          form while they&apos;re on the phone — and watch the completed
-          details appear inside Chrome the moment they hit submit.
+          Your team texts a registration form straight to the client&apos;s
+          phone. They fill it in privately — no shouting personal details
+          across a waiting room — and the completed card lands in Chrome the
+          moment they hit submit.
         </p>
         <div className="mt-8 flex items-center justify-center gap-3 flex-wrap">
           <Link href="/signup" className="btn-primary !py-3 !px-5 text-base">
@@ -55,7 +59,7 @@ export default function HomePage() {
           )}
         </div>
         <p className="mt-4 text-xs text-slate-400">
-          No credit card. Cancel any time.
+          No credit card. Set up in under 60 seconds.
         </p>
       </section>
 
@@ -63,29 +67,39 @@ export default function HomePage() {
       <section id="features" className="px-5 sm:px-8 max-w-6xl mx-auto">
         <SectionHeader
           eyebrow="Features"
-          title="Built for your front desk on a busy phone line"
-          sub="Every detail tuned for the moment a client is already on hold."
+          title="Built for a busy front desk"
+          sub="Every detail tuned for the moment a client walks in or rings up."
         />
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mt-10">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mt-10">
+          <Feature
+            icon={<EyeOff className="w-5 h-5" />}
+            title="Private by default"
+            body="Clients type sensitive details — phone, address, DOB, medical info — on their own phone, not out loud at a busy desk."
+          />
           <Feature
             icon={<MessageSquareText className="w-5 h-5" />}
-            title="SMS form delivery"
-            body="Clients tap a link, fill it on their phone, no app needed."
+            title="Sent in one tap"
+            body="Your team types the client's mobile, hits Send. They get a familiar text — no app, no login, no friction."
           />
           <Feature
             icon={<Zap className="w-5 h-5" />}
             title="Real-time arrival"
-            body="The client card animates into Chrome the second they hit submit."
+            body="A complete client card animates into the Chrome side panel the second they hit submit."
           />
           <Feature
             icon={<Smartphone className="w-5 h-5" />}
-            title="Mobile-first client form"
-            body="Multi-step, postcode lookup, native autofill — designed for thumbs."
+            title="Mobile-first form"
+            body="Multi-step, postcode lookup, native autofill — designed for thumbs, not desktops."
+          />
+          <Feature
+            icon={<SpellCheck className="w-5 h-5" />}
+            title="Spelt right, every time"
+            body="Clients type their own name, email and address. No misheard spellings, no wrong digits, no chasing."
           />
           <Feature
             icon={<ShieldCheck className="w-5 h-5" />}
             title="UK-built &amp; GDPR-ready"
-            body="Data lives in EU-hosted Supabase. Per-business isolation by default."
+            body="Data lives in EU-hosted Postgres. Per-business isolation by default. You stay in control."
           />
         </div>
       </section>
@@ -108,13 +122,13 @@ export default function HomePage() {
             {
               n: 2,
               t: 'Client gets a text',
-              b: 'They tap the link and fill in a mobile-optimised form on their phone.',
+              b: 'They tap the link and fill in a mobile-optimised form — privately, on their own phone.',
               illustration: <StepTwoArt />,
             },
             {
               n: 3,
-              t: 'Data lands in Chrome',
-              b: 'A client card pops in with copy buttons — paste straight into your system.',
+              t: 'Details land in Chrome',
+              b: 'A client card pops in with copy buttons — paste straight into your CRM, booking system, or notes.',
               illustration: <StepThreeArt />,
             },
           ].map((step) => (
@@ -132,6 +146,38 @@ export default function HomePage() {
         </ol>
       </section>
 
+      {/* Privacy / discretion -------------------------------------------- */}
+      <section className="px-5 sm:px-8 max-w-6xl mx-auto mt-24">
+        <div className="rounded-3xl bg-slate-900 text-white p-8 sm:p-12 overflow-hidden relative">
+          <div className="grid lg:grid-cols-[1.2fr_1fr] gap-10 items-center relative z-10">
+            <div>
+              <p className="text-xs uppercase tracking-wider text-rose-300 font-semibold flex items-center gap-2">
+                <Lock className="w-3.5 h-3.5" /> Discreet by design
+              </p>
+              <h2 className="mt-3 text-3xl sm:text-4xl font-extrabold tracking-tight">
+                No one wants to spell their address across a waiting room.
+              </h2>
+              <p className="mt-4 text-slate-300 leading-relaxed">
+                The traditional front desk makes clients share personal details
+                out loud — phone number, date of birth, medical history, payment
+                info — while a queue listens in. With {BRAND.name}, the sensitive
+                bits stay on the client&apos;s own phone. Your team gets the data;
+                your clients keep their dignity.
+              </p>
+              <ul className="mt-6 space-y-2.5 text-sm text-slate-200">
+                <DarkBullet>No more shouting personal info over a queue or a phone line.</DarkBullet>
+                <DarkBullet>Clients answer medical and consent questions privately.</DarkBullet>
+                <DarkBullet>Works whether the client is at home, in the waiting room, or out and about.</DarkBullet>
+              </ul>
+            </div>
+            <div className="relative">
+              <PrivacyArt />
+            </div>
+          </div>
+          <div className="absolute inset-0 bg-gradient-to-br from-brand-primary/10 to-transparent pointer-events-none" />
+        </div>
+      </section>
+
       {/* The questions reception skips ----------------------------------- */}
       <section className="px-5 sm:px-8 max-w-6xl mx-auto mt-24">
         <div className="rounded-3xl border border-rose-100 bg-rose-50/50 p-8 sm:p-12">
@@ -144,32 +190,27 @@ export default function HomePage() {
                 Ask the questions your front desk won&apos;t.
               </h2>
               <p className="mt-4 text-slate-600">
-                Reception is rushed: awkward questions get skipped, and names,
-                emails and addresses get misheard over the phone. When the client
-                fills it in themselves, nothing&apos;s missed and nothing&apos;s
-                spelt wrong — and you can ask anything you like.
+                Reception is rushed. Awkward questions get skipped. Details get
+                misheard or guessed. When the client fills it in themselves,
+                nothing&apos;s missed, nothing&apos;s spelt wrong, and you can
+                ask anything you like.
               </p>
             </div>
             <ul className="space-y-3">
               <AskItem
-                icon={<SpellCheck className="w-5 h-5" />}
-                q="Spelt right, every time"
-                body="Clients type their own name, email and address — no misheard spellings or wrong details taken down at the desk."
-              />
-              <AskItem
                 icon={<TrendingUp className="w-5 h-5" />}
                 q="“How did you hear about us?”"
-                body="See which marketing actually brings clients in — captured on every signup instead of guessed."
+                body="See which marketing actually brings clients in — captured on every signup instead of guessed at month-end."
               />
               <AskItem
                 icon={<Sparkles className="w-5 h-5" />}
                 q="Gender, consent, your own questions"
-                body="Ask anything you like. Toggle on extra fields — gender, marketing consent, custom questions — in seconds from your dashboard."
+                body="Toggle on extra fields — gender, marketing consent, custom questions — in seconds from your dashboard."
               />
               <AskItem
                 icon={<ClipboardList className="w-5 h-5" />}
                 q="The details you always end up chasing"
-                body="Full contact, address and custom fields — a complete, accurate client record without the phone-tag."
+                body="Full contact, address and custom fields — a complete, accurate client record without the back-and-forth."
               />
             </ul>
           </div>
@@ -181,7 +222,7 @@ export default function HomePage() {
         <SectionHeader
           eyebrow="Pricing"
           title="Simple, per-business pricing"
-          sub="Start free. Upgrade when you outgrow the limit."
+          sub="Start free. Upgrade when you outgrow the limit. Cancel any time."
         />
         <div className="mt-10">
           <PricingTable />
@@ -198,23 +239,27 @@ export default function HomePage() {
         <div className="mt-8 space-y-3">
           <Faq
             q="Do you cover the SMS cost?"
-            a={`Yes. ${BRAND.name} handles SMS sending on every paid plan. Your monthly SMS allowance is included in the price.`}
+            a={`Yes. ${BRAND.name} pays for every SMS we send on your behalf. Your monthly allowance is included in the plan price — no separate Twilio bill, no top-ups.`}
+          />
+          <Faq
+            q="Will clients actually fill it in on their phone?"
+            a="Almost every client already opens texts within minutes — open rates beat email by a wide margin. The form is mobile-first, takes about a minute, and works without an app or login. Most submissions come back before the client puts the phone down."
+          />
+          <Faq
+            q="Is it secure? Where is client data stored?"
+            a="Yes. Data lives in EU-hosted Postgres (Supabase). Each business is isolated at the database level. We never sell or share data, and submissions are only readable by admins of your workspace."
           />
           <Faq
             q="Does it work with my existing software?"
-            a="Yes — your team copies completed details from the Chrome extension into your CRM, booking system, or any tool that takes typed input. A direct integration is on the roadmap."
+            a="Yes. Your team copies completed details from the Chrome extension into your CRM, booking system, or any tool that accepts typed input. Direct integrations with the most-requested platforms are on the roadmap."
           />
           <Faq
             q="Can I customise which fields the client sees?"
-            a="Yes. The dashboard's form builder lets you toggle fields on/off, mark them required, and reorder them with drag-and-drop."
+            a="Yes. The form builder lets you toggle fields on/off, mark them required, reorder them with drag-and-drop, and add your own custom questions — all from your dashboard."
           />
           <Faq
             q="What if my team closes Chrome before the client submits?"
-            a="The extension lives as a Chrome side panel so it stays open while your team switches tabs. If they fully close Chrome, the client submission still arrives next time they open the panel (coming soon)."
-          />
-          <Faq
-            q="Where is client data stored?"
-            a="In your own Supabase Postgres instance, hosted in the EU. We don't see the contents of submissions."
+            a="The extension lives as a Chrome side panel so it stays open while your team switches tabs. Completed submissions are saved on every paid plan, so nothing is lost — just open the dashboard's History tab to find it."
           />
         </div>
       </section>
@@ -226,7 +271,8 @@ export default function HomePage() {
             Save your team 5 minutes per new client.
           </h2>
           <p className="mt-3 text-rose-100 max-w-xl mx-auto">
-            Try {BRAND.name} on your next 10 clients free. No credit card.
+            Try {BRAND.name} on your next 10 clients free. No credit card, no
+            setup call.
           </p>
           <Link
             href="/signup"
@@ -302,6 +348,15 @@ function AskItem({
         <p className="font-semibold text-sm">{q}</p>
         <p className="mt-0.5 text-sm text-slate-600">{body}</p>
       </div>
+    </li>
+  );
+}
+
+function DarkBullet({ children }: { children: React.ReactNode }) {
+  return (
+    <li className="flex items-start gap-2.5">
+      <Check className="w-4 h-4 text-rose-300 mt-0.5 shrink-0" />
+      <span>{children}</span>
     </li>
   );
 }
@@ -388,6 +443,45 @@ function StepThreeArt() {
       <rect x="92" y="132" width="58" height="4" rx="2" fill="#0F172A" />
       <rect x="92" y="146" width="40" height="4" rx="2" fill="#94A3B8" />
       <rect x="92" y="154" width="76" height="4" rx="2" fill="#0F172A" />
+    </svg>
+  );
+}
+
+function PrivacyArt() {
+  return (
+    <svg
+      viewBox="0 0 280 220"
+      className="w-full h-56 sm:h-64"
+      role="img"
+      aria-label="Phone showing a form being filled in privately"
+    >
+      <defs>
+        <linearGradient id="privacy-glow" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stopColor="#E11D48" stopOpacity="0.35" />
+          <stop offset="100%" stopColor="#E11D48" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <circle cx="140" cy="110" r="100" fill="url(#privacy-glow)" />
+      <rect x="100" y="20" width="80" height="170" rx="14" fill="white" stroke="#1E293B" strokeWidth="1.5" />
+      <rect x="124" y="26" width="32" height="3" rx="1.5" fill="#CBD5E1" />
+      <rect x="110" y="42" width="60" height="3" rx="1.5" fill="#0F172A" />
+      <rect x="110" y="50" width="40" height="2.5" rx="1.25" fill="#94A3B8" />
+      <rect x="110" y="64" width="60" height="14" rx="4" fill="#F1F5F9" />
+      <rect x="114" y="69" width="36" height="3" rx="1.5" fill="#0F172A" />
+      <rect x="110" y="84" width="60" height="14" rx="4" fill="#F1F5F9" />
+      <rect x="114" y="89" width="48" height="3" rx="1.5" fill="#0F172A" />
+      <rect x="110" y="104" width="60" height="14" rx="4" fill="#F1F5F9" />
+      <rect x="114" y="109" width="28" height="3" rx="1.5" fill="#0F172A" />
+      <rect x="110" y="124" width="60" height="14" rx="4" fill="#F1F5F9" />
+      <rect x="114" y="129" width="42" height="3" rx="1.5" fill="#0F172A" />
+      <rect x="110" y="156" width="60" height="20" rx="10" fill="#E11D48" />
+      <text x="124" y="170" fontSize="9" fill="white" fontWeight="600">
+        Submit
+      </text>
+      <circle cx="200" cy="56" r="22" fill="#E11D48" />
+      <rect x="194" y="51" width="12" height="10" rx="2" fill="white" />
+      <path d="M197 51 V47 a3 3 0 0 1 6 0 V51" stroke="white" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+      <circle cx="200" cy="56" r="1.5" fill="#E11D48" />
     </svg>
   );
 }
